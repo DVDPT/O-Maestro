@@ -2,7 +2,7 @@
 
 #define Fs 8000 //hz
 #define Fo 440
-#define N 40
+#define N 4
 
  double PI = 3.1415926;
 
@@ -32,7 +32,7 @@ void main()
 	
 	generate_sinusoids(Fs, Fo, N, sinusoid);
 
-	power = pot_freq(sinusoid, N, Fo);
+ 	power = pot_freq(sinusoid, N, Fo);
 	needePower = calculate_power(sinusoid,N);
 	power = power;
 }
