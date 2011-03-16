@@ -1,7 +1,7 @@
 #include "goertzel.h"
 
 const int Fs = 8000; //hz
-const int Fo = 440;
+const int Fo = 240;
 #define N  200
 const int K = 11;
 
@@ -32,9 +32,9 @@ static float calculate_power(U16 * sinusoid, int size)
 	int i;
 	float sum = 0;
 	for(i = 0; i<size; ++i)
-		sum+=sinusoid[i];
+		sum+=pow((float)sinusoid[i],2);
 
-	return sum * sum;
+	return sum;
 }
 
 void main()
@@ -44,7 +44,7 @@ void main()
 	
 	generate_sinusoids(Fs, Fo, N, sinusoid);
 
- 	power = pot_freq_(sinusoid, N, Fs,200);
+ 	power = pot_freq_(sinusoid, N, Fs,440);
 	neededPower = calculate_power(sinusoid,N);
 	printf("PowerFreq %d\n",power);
 	printf("PowerAll %d\n",neededPower);
