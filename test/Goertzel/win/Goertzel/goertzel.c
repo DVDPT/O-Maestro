@@ -38,7 +38,7 @@ static float goertzelwithFsFo(U16 * x, int n, int fs, int fo)
 	for(i = 0; i < n; ++i)
 	{
 
-		Q0 = coeffi * Q1 - Q2 + x[i];
+		Q0 = x[i] + (coeffi * Q1) - Q2 ;
 		Q2 = Q1;
 		Q1 = Q0;
 	}
