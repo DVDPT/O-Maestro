@@ -3,7 +3,7 @@
 
 const int Fs = 8000; //hz
 const int Fo = 240;
-#define N  200
+#define N  440
 const int K = 11;
 
  double PI = 3.1415926;
@@ -15,11 +15,11 @@ static void generate_sinusoids(int fs, int fo, int size, U16 * sinusoid)
 	{
 		sinusoid[i] = 1000 * cos((2*PI*fo*i) / fs);
 	}
-
+	/*
 	for(; i<size;++i)
 	{
 		sinusoid[i] = 1000 * cos((2*PI*(fo-100)*i) / fs);
-	}
+	}*/
 }
 /*/
 static float calculate_power(U16 * sinusoid, int size)
@@ -43,14 +43,14 @@ static float calculate_power(U16 * sinusoid, int size)
 	return sum;
 }
 
-void main2()
+void main()
 {
 	U16 sinusoid[N];
 	float power, neededPower;
 	
 	generate_sinusoids(Fs, Fo, N, sinusoid);
 
- 	power = pot_freq_(sinusoid, N, Fs,240);
+ 	power = pot_freq_(sinusoid, N, Fs,Fo);
 	neededPower = calculate_power(sinusoid,N);
 	printf("PowerFreq %d\n",power);
 	printf("PowerAll %d\n",neededPower);
@@ -64,7 +64,7 @@ int _inline is_integer(float f){
     //return (f == (float)i) || ((f-0.01)  == (float)i);
 }
 
-void main()
+void main2()
 {
 	int FS = 8300;
 	float deltaF = 36.65;
