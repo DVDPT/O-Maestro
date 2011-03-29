@@ -1,0 +1,87 @@
+#define SAMPLING_RATE    2003.21  
+ #define MAX_BINS      6  
+ #define GOERTZEL_N     96  
+ #define pi                         3.141592654  
+ #define threshold               2E4  
+ #define true                    1  
+ #define false                    0  
+ const float freqs[MAX_BINS] = { 83, 110, 147, 196, 247, 330 };   
+ unsigned int     sample_count = 0;  
+ unsigned char     levels[ MAX_BINS];  
+ unsigned char     samples[GOERTZEL_N];  
+ unsigned char     sample_complete = false;  
+ float               prev1[ MAX_BINS ];  
+ float               prev2[ MAX_BINS ];  
+ float               magnitude[ MAX_BINS ];  
+ float                coeffs[ MAX_BINS ];  
+ void interrupt isr()     // Interrupt Handler  
+ {  
+      if(ADIF)// A/D conversion complete interrupt  
+      {            
+           samples[++sample_count] = ADRESH; // Read 8-bit ADC result  
+           if (sample_count == GOERTZEL_N)  
+           {  
+                TMR0IE = 0;          //disable TMR0 interrupt  
+                sample_complete = true;  
+           }  
+           ADIF = 0;     // clear the flag  
+      }  
+      if (TMR0IF) // Timer0 Interrupt  
+      {  
+           ADGO = 1;     // initiate ADC conversion  
+           TMR0 = 100; // reset the timer0 preset count  
+           TMR0IF = 0; // clear the flag  
+      }  
+ }  
+ void calc_coeffs()     // calculate coefficients  
+ {  
+      unsigned int k, n;  
+      for(n = 0; n < MAX_BINS; n++)  
+      {  
+           k = (unsigned int)(0.5 + (float)GOERTZEL_N * freqs[n] / SAMPLING_RATE);  
+           coeffs[n] = 2.0 * cos(2.0 * pi * (float)k/GOERTZEL_N);  
+      }  
+ }  
+ void main(void)  
+ {  
+      unsigned int i;  
+      float val, max;  
+      calc_coeffs();  
+      // initializations  
+      init_display();     // initialize LCD  
+      init_adc();          // initialize PIC ADC module  
+      init_timer();     // initialize Timer0  
+      while(1)  
+      {  
+           if( sample_complete == true )  
+           {  
+                for(i = 0; i < MAX_BINS; i++) {  
+                     prev2[i] = prev1[i] = 0.0;  
+                }  
+                for(sample_count=0; sample_count < GOERTZEL_N; sample_count ++)  
+                {  
+                     //GOERTZEL Algorithm  
+                     for ( i = 0; i < MAX_BINS; i++ )  
+                     {  
+                          val = coeffs[i] * prev1[i] - prev2[i] + (float)samples[sample_count];  
+                          prev2[i] = prev1[i];  
+                          prev1[i] = val;  
+                     }  
+                }  
+                sample_count = 0;  
+                sample_complete = false;  
+                TMR0IE = 1;     // enable TMR0 interrupt, restart storing samples  
+                max = threshold;  
+             for ( i=0; i<MAX_BINS; i++ )     // compute the amplitudes/magnitudes  
+                {  
+                     magnitude[i] = (prev1[i] * prev1[i]) + (prev2[i] * prev2[i]) - (coeffs[i] * prev1[i] * prev2[i]);  
+                     if (magnitude[i] > max) max = magnitude[i];  
+                }  
+             /*for ( i=0; i<MAX_BINS; i++ )  
+                {  
+                     levels[i] = (unsigned char)(magnitude[i] / max);  
+                }  
+                display_spectrum();*/  
+           }  
+      }  
+ }  
