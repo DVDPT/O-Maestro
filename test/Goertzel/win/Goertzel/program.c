@@ -55,7 +55,7 @@ void main()
 	sinusoidPower = calculate_power(sinusoid,N);
  	do
 	{
-		relativePower = pot_freq_(sinusoid, N, Fs,fn)/A;
+		relativePower = pot_freq_(sinusoid, N, Fs,fn) / A;
 
 		printf("\nPower %0.2f, RelativePower %0.2f of %d || Dif:%0.2f || Percent: %0.1f%% \n"
 				,sinusoidPower
