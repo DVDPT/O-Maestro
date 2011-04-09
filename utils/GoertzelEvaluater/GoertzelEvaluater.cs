@@ -5,10 +5,14 @@ using System.Text;
 
 namespace GoertzelEvaluater
 {
-    public struct GoertzelFrequency
+    public class GoertzelFrequency
     {
         public double Frequency;
         public double Coefficient;
+        public void SetCoefficient(double coef)
+        {
+            Coefficient = coef;
+        }
     }
 
     public class GoertzelFrequencies
@@ -33,7 +37,7 @@ namespace GoertzelEvaluater
             sb.Append(string.Format("\n\nFS:{0}  | N:{1} | Freqs:{2}\n",Fs,N,_freqs.Count));
             foreach (GoertzelFrequency goertzelFrequency in _freqs)
             {
-                sb.Append(string.Format("Freq: {0}\n", goertzelFrequency.Frequency));
+                sb.Append(string.Format("Freq: {0} \t| Coeff:{1}\n", goertzelFrequency.Frequency,goertzelFrequency.Coefficient));
             }
             return sb.ToString();
         }
@@ -82,9 +86,23 @@ namespace GoertzelEvaluater
         {
             freqs = freqs.OrderBy(d => d).ToArray();
             var diffs = CalculateDiff(freqs);
-            var ret =  GenerateGoertzelFrequencies(diffs);
-            return ret;
+            var generatedFrequencies =  GenerateGoertzelFrequencies(diffs);
 
+            CalculateCoefficientFromFrequencies(generatedFrequencies);
+            return generatedFrequencies;
+        }
+
+        private static void CalculateCoefficientFromFrequencies(GoertzelFrequencies[] generatedFrequencies)
+        {
+            foreach (GoertzelFrequencies goertzelFrequency in generatedFrequencies)
+            {
+                foreach (GoertzelFrequency freq in goertzelFrequency.Frequencies)
+                {
+                    freq.SetCoefficient(2 * Math.Cos(2 * Math.PI * freq.Frequency / goertzelFrequency.Fs));
+                }
+            }
+
+            
         }
 
         private GoertzelFrequencies[] GenerateGoertzelFrequencies(FrequencyDiff[] diffs)

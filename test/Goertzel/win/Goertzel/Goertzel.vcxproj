@@ -61,13 +61,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="goertzel.c" />
-    <ClCompile Include="goertzel_evaluator.c" />
+    <ClCompile Include="goertzel_controller.c" />
     <ClCompile Include="program.c" />
     <ClCompile Include="Times.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="goertzel.h" />
-    <ClInclude Include="goertzel_evaluator.h" />
+    <ClInclude Include="goertzel_controller.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

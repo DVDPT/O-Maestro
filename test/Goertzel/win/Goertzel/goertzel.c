@@ -2,9 +2,9 @@
  
 static float _inline  calculate_coefficient(int fs, int fn)
 {
-	//return 2 * cos((double)(2 * PI * fn) / (double)fs);
-	double k = 200 * fn / fs;
-	return 2 * cos(2*PI/200*k);
+	return 2 * cos((double)(2 * PI * fn) / (double)fs);
+	//double k = 200 * fn / fs;
+	//return 2 * cos(2*PI/200*k);
 }
 
 static double _inline  calculate_relative_power(float Q1, float Q2, float coeff)
