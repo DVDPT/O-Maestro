@@ -101,20 +101,12 @@ typedef void (*goertzel_controller_callback_t)(goertzel_result_t*);
 ///	Initialize the Goertzel Controller.
 ///
 void 
-	goertzel_controller_init
-	(
-	);
+goertzel_controller_init
+(
+	goertzel_controller_callback_t callback
+);
 
-///
-///	Sets the Goertzel Controller callback, when an sample is processed this callback will be called with the results.
-///	@param $callback
-///		The callback function when a sample is fully processed.
-///
-void 
-	goertzel_controller_set_callback
-	(
-		goertzel_controller_callback_t callback
-	);
+
 
 ///
 ///
@@ -126,11 +118,11 @@ void
 ///
 ///
 void 
-	goertzel_controller_add_samples
-	(
-		goertzel_sample_t * samples,
-		int samplesSize
-	);
+goertzel_controller_add_samples
+(
+	goertzel_sample_t * samples,
+	int samplesSize
+);
 
 
 
