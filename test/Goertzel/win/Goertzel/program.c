@@ -1,13 +1,12 @@
 #include "goertzel.h"
 #include <math.h>
+#include <string.h>
+#include "HeaderWav.h"
 
-#define N  (200)
-#define A  (3)		
+#define N  (400)
+#define A  (1000)		
 //3.1415926;
 
-const int Fs = 8800; //hz
-const int Fo = 440;
-//const int K  = 1;
 
 double notes []={27.5, //
 				29.1352,
@@ -99,6 +98,106 @@ double notes []={27.5, //
 				4186.01,
 				};
 
+const int Fs = 8800; //hz
+const int Fo = 440;
+const int sizeArrayNotes = (sizeof(notes)/sizeof(double));
+int size ;
+//const int K  = 1;
+
+
+
+static void generator_sinusoid_to_file(U16 * sinusoids, int fn)
+{
+	
+	int i = 0;
+	for(;i < N ; ++i)
+	{
+ 		//sinusoids[i] = (U16)(A * cos((2*PI*fn*i) / (float)Fs));
+		sinusoids[i] = (double)(A * sin((2*PI*fn*i) / (double)Fs));
+	}
+	
+}
+
+
+
+static void create_File_Wav(const char * fileName)
+{
+
+	FILE * newFile = fopen(fileName, "w+");
+	U16 sinusoids[N];
+	int maxSamples = 100000;
+	int currSamples = 0;
+
+	WavHeader* headerWav =(WavHeader*)malloc(sizeof(WavHeader));
+	strcpy((char*)headerWav->RIFF,"RIFF");
+	headerWav->FLEN =  maxSamples + sizeof(headerWav) - 8;
+	strcpy((char*)headerWav->WAVE,"WAVE");
+    strcpy((char*)headerWav->FMT, "fmt ");
+	headerWav->blen = 16;
+	headerWav->FTAG = 1;
+	headerWav->CH = 1;
+	headerWav->fs1 =Fs;
+	headerWav->byte_sec = Fs;
+	headerWav->byte_blk = 1;
+	headerWav->bit_samp = 16;
+	strcpy((char*)headerWav->data,"data");
+	headerWav->D_leng = maxSamples;
+	fwrite(headerWav,(sizeof(WavHeader)),1,newFile);
+	
+	
+	
+	while(currSamples<maxSamples)
+	{
+		generator_sinusoid_to_file(sinusoids,698);
+		fwrite(sinusoids,sizeof(U16)*N,1,newFile);
+		/*if(currSamples<50000)
+		{
+			generator_sinusoid_to_file(sinusoids,1245);
+			fwrite(sinusoids,sizeof(U16)*N,1,newFile);
+		}*/
+
+		/*if(currSamples>=50000)
+		{
+			generator_sinusoid_to_file(sinusoids,440);
+			fwrite(sinusoids,sizeof(U16)*N,1,newFile);
+		}*/
+		currSamples+=N;
+	}
+	
+	fclose(newFile);
+
+}
+
+
+
+static double * genarate_sinusoidsWithFileWav(const char* fileName)
+{
+	FILE * f = fopen(fileName,"r+");
+	int sizeHeader = sizeof(WavHeader);
+	WavHeader* headerWav =(WavHeader*)malloc(sizeof(WavHeader));
+	double * sinusoid ;
+	int i=0;
+	short aux[1];
+	if(f== NULL)
+	{
+		exit(0);
+	}
+	
+	fread(headerWav,sizeof(WavHeader),1,f);
+	sinusoid = (double*)malloc(headerWav->D_leng*sizeof(double));
+	fseek(f,sizeof(WavHeader),0);
+	size =headerWav->D_leng;
+	for(;i<headerWav->D_leng;i++)
+	{
+		fread(aux,2,1,f);
+		sinusoid[i]=*aux;
+	}
+	fclose(f);
+	return sinusoid;
+
+
+}
+
 
 
 static void generate_sinusoids(int fs, int fo, int size, U16 * sinusoid)
@@ -115,8 +214,34 @@ static void generate_sinusoids_double_samples(int fs, int fo, int size, double* 
 	int i = 0;
 	for(;i < size ; ++i)
 	{
- 		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs)) + (A * sin((2*PI*123*i) / (float)fs)) + (A * sin((2*PI*129*i) / (float)fs));
+ 		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs));// + (A * sin((2*PI*123*i) / (float)fs)) + (A * sin((2*PI*129*i) / (float)fs));
 	}
+}
+
+static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int size, double* sinusoid)
+{
+	int i = 0;
+	double note =notes[0];
+	int idxNote = i;
+
+	printf("Notas introduzidas no sinal:\n");
+	printf("note = %f\n",note);
+
+	for(;i < size ; ++i)
+	{
+		
+ 		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs)) + (double)(A * sin((2*PI*27.5*i) / (double)fs)) ;
+		/*if((sizeArrayNotes % (i+1)) > 10 && i<sizeArrayNotes && (notes[i]-note)> 100)
+		{
+			printf("note = %f e numero %d \n",note, i-idxNote);
+			idxNote = i;
+			note = notes[i];
+			//printf("note = %f e numero que se encontra no sinal é \n",note);
+		}*/
+		
+	
+	}
+	system("pause");
 }
 
 
@@ -137,64 +262,100 @@ static double calculate_power_double_samples(double* sinusoid, int size)
 		sum += sinusoid[i]*sinusoid[i];
 	return sum;
 }
-void main(){
-	int size = (sizeof(notes)/sizeof(double));
-	int i;
-	for(i = size-1; i>=0; --i)
-		printf("%0.5f,\n",notes[i]);
-	system("pause");
 
-}
-void _222main()
+void main()
 {
-	U16    sinusoid[N];
+	//U16   * sinusoid;
+	double   * sinusoid;
 	double sinusoid_double_samples[N];
+	double * sinusoid_double_samples_with_file;
 	double sinusoidPower, relativePower;
-	int fn = Fo;
+	double fn = 698;
 	int i=0;
 	
+	create_File_Wav("C:\\Users\\Sorcha\\ISEL\\PS\\Projecto Final Curso\\O-Maestro\\test\\SamplesOfNotes\\MyLá.wav");
+	sinusoid=genarate_sinusoidsWithFileWav("C:\\Users\\Sorcha\\ISEL\\PS\\Projecto Final Curso\\O-Maestro\\test\\SamplesOfNotes\\MyLá.wav");
+	//generate_sinusoids_double_samples(Fs,698,N,sinusoid);
+	for(i=0;i<size;i+=N)
+	{
+		
+		//sinusoidPower = calculate_power(sinusoid,N);
+		//relativePower = pot_freq_(sinusoid, N, Fs,440);
+		if(i<50000)
+		{
+
+			relativePower = pot_freq_double_samples(sinusoid, N, Fs,fn);
+			sinusoidPower = calculate_power_double_samples(sinusoid,N);
+		}
+		else
+		{
+			fn=440;
+			relativePower = pot_freq_double_samples(sinusoid, N, Fs,fn);
+			sinusoidPower = calculate_power_double_samples(sinusoid,N);
+			
+		}
+
+		printf("\nPower %0.2f\n RelativePowerGoertzel %0.2f\n Freq.=%f || Dif:%0.2f || Percent: %0.1f%% \n"
+					,sinusoidPower
+					,relativePower
+					,fn
+					,sinusoidPower - relativePower
+					,(relativePower*100)/sinusoidPower 
+				  );
 	
+		sinusoid+=N;
+	
+	}
 	// With integer samples.	
-	generate_sinusoids(Fs, Fo, N, sinusoid);
+	/*generate_sinusoids(Fs, Fo, N, sinusoid);
 	printf("## Integer sinusoid samples ##:\n" );	
 	for(; i<N; ++i)
 		printf("n=%d -> %d \n", i, sinusoid[i] );
 	sinusoidPower = calculate_power(sinusoid,N);
  	relativePower = pot_freq_(sinusoid, N, Fs,fn);
 	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n", sinusoidPower, relativePower );
-
+	*/
 	
 	// With float samples.	
-	generate_sinusoids_double_samples(Fs, Fo, N, sinusoid_double_samples);
-	printf("## Double sinusoid samples ##:\n" );	
+	generate_sinusoids_double_samples_multi_notes(Fs, fn, N, sinusoid_double_samples);
+	sinusoidPower = calculate_power_double_samples(sinusoid_double_samples,N);
+//	printf("## Double sinusoid samples ##:\n" );	
+	
+	/*
 	for( i=0; i<N; ++i)
 		printf("n=%d -> %.3f \n", i, sinusoid_double_samples[i] );
 	sinusoidPower = calculate_power_double_samples(sinusoid_double_samples,N);
-
- 	relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,fn);
-	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
+	*/
+ 	//relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,fn);
+	//printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
 
 	//relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,125);
-	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
+	//printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
 
 	//relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,600);
-	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
+	//printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
 
-	printf("Acabou");
 
 	
 	do
 	{
 		//relativePower = pot_freq_(sinusoid, N, Fs,fn);
+		int sizeNotes = (sizeof(notes)/sizeof(double));
+		int idx =0;
 
-		printf("\nPower %0.2f\n RelativePower %0.2f\n Freq.=%d || Dif:%0.2f || Percent: %0.1f%% \n"
-				,sinusoidPower
-				,relativePower
-				,fn
-				,sinusoidPower - relativePower
-				,(relativePower*100)/sinusoidPower 
+		while(sizeNotes >idx)
+		{
+			relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,notes[idx]);
+			printf("\nPower %0.2f\n RelativePowerGoertzel %0.2f\n Freq.=%f || Dif:%0.2f || Percent: %0.1f%% \n"
+					,sinusoidPower
+					,relativePower
+					,notes[idx]
+					,sinusoidPower - relativePower
+					,(relativePower*100)/sinusoidPower 
 			  );
-
+					system("pause");
+			++idx;
+		}
 		LABEL:
 		scanf("%d",&fn);
 
@@ -207,31 +368,4 @@ void _222main()
 	
 }
 
-int _inline is_integer(float f){
-    int i = f;
-	float minus = f - (float)i;
-	return minus < 0.001;
-    //return (f == (float)i) || ((f-0.01)  == (float)i);
-}
 
-void main2()
-{
-	int FS = 8300;
-	double deltaF = 36.65;
-	float k = 0;
-	float coef = deltaF / FS;
-	int i;
-	for(i = 0; i < 100000; ++i)
-	{
-		//k = ((float)(deltaF * i)) / (float)FS;
-		//k = ((float)(i * FS)) / (deltaF);
-		k = coef * i;
-		if(is_integer(k) && k!=0)
-		{
-			printf(" K=  %f | N=%d\n",k,i);
-			break;
-		}  
-	}
-	printf("bye");
-	getchar();
-}

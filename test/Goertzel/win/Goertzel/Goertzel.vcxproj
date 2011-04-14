@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="goertzel.h" />
+    <ClInclude Include="HeaderWav.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
