@@ -68,8 +68,12 @@
   <ItemGroup>
     <ClInclude Include="bounded_queue.h" />
     <ClInclude Include="goertzel.h" />
+<<<<<<< HEAD
+    <ClInclude Include="HeaderWav.h" />
+=======
     <ClInclude Include="goertzel_controller.h" />
     <ClInclude Include="lists.h" />
+>>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
