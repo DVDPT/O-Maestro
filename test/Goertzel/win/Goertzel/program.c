@@ -3,8 +3,13 @@
 #include <string.h>
 #include "HeaderWav.h"
 
+<<<<<<< HEAD
 #define N  (400)
 #define A  (1000)		
+=======
+#define N  (2000)
+#define A  (3)		
+>>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
 //3.1415926;
 
 
@@ -218,6 +223,7 @@ static void generate_sinusoids_double_samples(int fs, int fo, int size, double* 
 	}
 }
 
+<<<<<<< HEAD
 static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int size, double* sinusoid)
 {
 	int i = 0;
@@ -246,6 +252,9 @@ static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int si
 
 
 static double calculate_power(U16 * sinusoid, int size)
+=======
+ double calculate_power(U16 * sinusoid, int size)
+>>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
 {
 	int i;
 	double sum = 0;
@@ -263,7 +272,25 @@ static double calculate_power_double_samples(double* sinusoid, int size)
 	return sum;
 }
 
+<<<<<<< HEAD
 void main()
+=======
+const int noteSize = (sizeof(notes)/sizeof(double));
+
+void main(){
+	U16    sinusoid[N];
+	generate_sinusoids(Fs, Fo, N, sinusoid,noteSize);
+	calc_time_from_processing_all_notes(notes,sinusoid,N,Fs,noteSize);
+	/*
+	int size = (sizeof(notes)/sizeof(double));
+	int i;
+	for(i = size-1; i>=0; --i)
+		printf("%0.5f,\n",notes[i]);
+	system("pause");
+	*/
+}
+void _222main()
+>>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
 {
 	//U16   * sinusoid;
 	double   * sinusoid;
