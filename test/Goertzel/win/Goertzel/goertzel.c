@@ -7,13 +7,13 @@ static float _inline  calculate_coefficient(int fs, int fn)
 	//return 2 * cos(2*PI/200*k);
 }
 
-static double _inline  calculate_relative_power(float Q1, float Q2, float coeff)
+static double _inline calculate_relative_power(float Q1, float Q2, float coeff)
 {
 		
 	return (Q1*Q1) + (Q2*Q2) - Q1 * Q2 * coeff;		
 }
 
-static double _inline  calculate_relative_power_double_samples(double Q1, double Q2, double coeff)
+static double _inline calculate_relative_power_double_samples(double Q1, double Q2, double coeff)
 {
 		
 	return (Q1*Q1) + (Q2*Q2) - Q1 * Q2 * coeff;		
