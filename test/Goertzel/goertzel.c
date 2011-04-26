@@ -44,7 +44,6 @@ static float goertzelwithFsFo(U16 * x, int n, int fs, int fo)
 	Q0 = Q1 = Q2 = 0;
 	for(i = 0; i < n; ++i)
 	{
-
 		Q0 = x[i] + (coeffi * Q1) - Q2 ;
 		Q2 = Q1;
 		Q1 = Q0;
@@ -74,7 +73,7 @@ float pot_freq(U16 * x, int n, int k)
 	
 }
 
-float pot_freq_(U16 * x, int n, int fs,int fo)
+double pot_freq_(U16 * x, int n, int fs,int fo)
 {
 	return (2*goertzelwithFsFo(x,n,fs,fo)) / n;
 }

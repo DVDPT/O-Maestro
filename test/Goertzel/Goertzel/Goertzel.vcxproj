@@ -60,19 +60,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\bounded_queue.h" />
-    <ClInclude Include="..\goertzel.h" />
-    <ClInclude Include="..\goertzel_controller.h" />
-    <ClInclude Include="..\goertzel_evaluator.h" />
-    <ClInclude Include="..\HeaderWav.h" />
-    <ClInclude Include="..\lists.h" />
+    <ClCompile Include="goertzel.c" />
+    <ClCompile Include="goertzel_controller.c" />
+    <ClCompile Include="goertzel_evaluator.c" />
+    <ClCompile Include="program.c" />
+    <ClCompile Include="Test.c" />
+    <ClCompile Include="Times.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\goertzel.c" />
-    <ClCompile Include="..\goertzel_controller.c" />
-    <ClCompile Include="..\goertzel_evaluator.c" />
-    <ClCompile Include="..\program.c" />
-    <ClCompile Include="..\Times.c" />
+    <ClInclude Include="bounded_queue.h" />
+    <ClInclude Include="goertzel.h" />
+    <ClInclude Include="goertzel_controller.h" />
+    <ClInclude Include="goertzel_evaluator.h" />
+    <ClInclude Include="HeaderWav.h" />
+    <ClInclude Include="lists.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
