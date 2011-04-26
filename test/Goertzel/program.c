@@ -3,13 +3,11 @@
 #include <string.h>
 #include "HeaderWav.h"
 
-<<<<<<< HEAD
-#define N  (400)
+
+
+#define N  (200)
 #define A  (1000)		
-=======
-#define N  (2000)
-#define A  (3)		
->>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
+
 //3.1415926;
 
 
@@ -210,7 +208,7 @@ static void generate_sinusoids(int fs, int fo, int size, U16 * sinusoid)
 	int i = 0;
 	for(;i < size ; ++i)
 	{
- 		sinusoid[i] = (U16)(A * sin((2*PI*fo*i) / (float)fs));// + (A * sin((2*PI*123*i) / (float)fs)) + (A * sin((2*PI*125*i) / (float)fs));
+ 		sinusoid[i] = (U16)(A * sin((2*PI*fo*i) / (float)fs)) + (A * sin((2*PI*3951.07*i) / (float)fs)) + (A * sin((2*PI*622.254*i) / (float)fs));
 	}
 }
 
@@ -219,11 +217,11 @@ static void generate_sinusoids_double_samples(int fs, int fo, int size, double* 
 	int i = 0;
 	for(;i < size ; ++i)
 	{
- 		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs));// + (A * sin((2*PI*123*i) / (float)fs)) + (A * sin((2*PI*129*i) / (float)fs));
+ 		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs)) + (A * sin((2*PI*3951.07*i) / (float)fs)) + (A * sin((2*PI*622.254*i) / (float)fs));
 	}
 }
 
-<<<<<<< HEAD
+
 static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int size, double* sinusoid)
 {
 	int i = 0;
@@ -252,9 +250,7 @@ static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int si
 
 
 static double calculate_power(U16 * sinusoid, int size)
-=======
- double calculate_power(U16 * sinusoid, int size)
->>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
+
 {
 	int i;
 	double sum = 0;
@@ -272,15 +268,13 @@ static double calculate_power_double_samples(double* sinusoid, int size)
 	return sum;
 }
 
-<<<<<<< HEAD
-void main()
-=======
+
 const int noteSize = (sizeof(notes)/sizeof(double));
 
-void main(){
+void _22main(){
 	U16    sinusoid[N];
-	generate_sinusoids(Fs, Fo, N, sinusoid,noteSize);
-	calc_time_from_processing_all_notes(notes,sinusoid,N,Fs,noteSize);
+	//generate_sinusoids(Fs, Fo, N, sinusoid,noteSize);
+	//calc_time_from_processing_all_notes(notes,sinusoid,N,Fs,noteSize);
 	/*
 	int size = (sizeof(notes)/sizeof(double));
 	int i;
@@ -289,8 +283,7 @@ void main(){
 	system("pause");
 	*/
 }
-void _222main()
->>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
+void _55main()
 {
 	//U16   * sinusoid;
 	double   * sinusoid;
@@ -363,6 +356,68 @@ void _222main()
 	//printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
 
 
+	
+	do
+	{
+		//relativePower = pot_freq_(sinusoid, N, Fs,fn);
+		int sizeNotes = (sizeof(notes)/sizeof(double));
+		int idx =0;
+
+		while(sizeNotes >idx)
+		{
+			relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,notes[idx]);
+			printf("\nPower %0.2f\n RelativePowerGoertzel %0.2f\n Freq.=%f || Dif:%0.2f || Percent: %0.1f%% \n"
+					,sinusoidPower
+					,relativePower
+					,notes[idx]
+					,sinusoidPower - relativePower
+					,(relativePower*100)/sinusoidPower 
+			  );
+					system("pause");
+			++idx;
+		}
+		LABEL:
+		scanf("%d",&fn);
+
+		if(fn == -2)
+		{
+			system("cls");
+			goto LABEL;
+		}
+	}while(fn != -1);
+	
+}
+
+
+
+void main()
+{
+	U16    sinusoid[N];
+	double sinusoid_double_samples[N];
+	double sinusoidPower, relativePower;
+	int fn = Fo;
+	int i=0;
+	
+	
+	
+	
+	generate_sinusoids(Fs, Fo, N, sinusoid);
+	printf("## Integer sinusoid samples ##:\n" );	
+	for(; i<N; ++i)
+		printf("n=%d -> %d \n", i, sinusoid[i] );
+	sinusoidPower = calculate_power(sinusoid,N);
+ 	relativePower = pot_freq_(sinusoid, N, Fs,fn);
+	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n", sinusoidPower, relativePower );
+
+	
+	// With float samples.	
+	generate_sinusoids_double_samples(Fs, Fo, N, sinusoid_double_samples);
+	printf("## Double sinusoid samples ##:\n" );	
+	for( i=0; i<N; ++i)
+		printf("n=%d -> %.3f \n", i, sinusoid_double_samples[i] );
+	sinusoidPower = calculate_power_double_samples(sinusoid_double_samples,N);
+ 	relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,fn);
+	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
 	
 	do
 	{
