@@ -1,15 +1,13 @@
-#include "goertzel.h"
+/*
 #include <math.h>
 #include <string.h>
 #include "HeaderWav.h"
 
-<<<<<<< HEAD
-#define N  (400)
+
+
+#define N  (200)
 #define A  (1000)		
-=======
-#define N  (2000)
-#define A  (3)		
->>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
+
 //3.1415926;
 
 
@@ -166,6 +164,7 @@ static void create_File_Wav(const char * fileName)
 			generator_sinusoid_to_file(sinusoids,440);
 			fwrite(sinusoids,sizeof(U16)*N,1,newFile);
 		}*/
+/*
 		currSamples+=N;
 	}
 	
@@ -210,7 +209,8 @@ static void generate_sinusoids(int fs, int fo, int size, U16 * sinusoid)
 	int i = 0;
 	for(;i < size ; ++i)
 	{
- 		sinusoid[i] = (U16)(A * sin((2*PI*fo*i) / (float)fs));// + (A * sin((2*PI*123*i) / (float)fs)) + (A * sin((2*PI*125*i) / (float)fs));
+ 		//[i] = (U16)(A * sin((2*PI*fo*i) / (float)fs)) + (U16)(A * sin((2*PI*880*i) / (float)fs)) + (U16)(A * sin((2*PI*1760*i) / (float)fs)) + (U16)(A * sin((2*PI*2093*i) / (float)fs)) + (U16)(A * sin((2*PI*3520*i) / (float)fs));
+		sinusoid[i] = (U16)(A * sin((2*PI*fo*i) / (float)fs)) ;
 	}
 }
 
@@ -219,11 +219,12 @@ static void generate_sinusoids_double_samples(int fs, int fo, int size, double* 
 	int i = 0;
 	for(;i < size ; ++i)
 	{
- 		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs));// + (A * sin((2*PI*123*i) / (float)fs)) + (A * sin((2*PI*129*i) / (float)fs));
+ 		//sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs)) + (double)(A * sin((2*PI*880*i) / (float)fs)) + (double) (A * sin((2*PI*1760*i) / (float)fs))+ (double)(A * sin((2*PI*2093*i) / (float)fs)) +(double)(A * sin((2*PI*3520*i) / (double)fs));
+		sinusoid[i] = (double)(A * sin((2*PI*fo*i) / (double)fs)) ;
 	}
 }
 
-<<<<<<< HEAD
+
 static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int size, double* sinusoid)
 {
 	int i = 0;
@@ -244,6 +245,7 @@ static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int si
 			note = notes[i];
 			//printf("note = %f e numero que se encontra no sinal é \n",note);
 		}*/
+/*
 		
 	
 	}
@@ -252,9 +254,7 @@ static void generate_sinusoids_double_samples_multi_notes(int fs, int fo, int si
 
 
 static double calculate_power(U16 * sinusoid, int size)
-=======
- double calculate_power(U16 * sinusoid, int size)
->>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
+
 {
 	int i;
 	double sum = 0;
@@ -272,15 +272,13 @@ static double calculate_power_double_samples(double* sinusoid, int size)
 	return sum;
 }
 
-<<<<<<< HEAD
-void main()
-=======
+
 const int noteSize = (sizeof(notes)/sizeof(double));
 
-void main(){
+void _22main(){
 	U16    sinusoid[N];
-	generate_sinusoids(Fs, Fo, N, sinusoid,noteSize);
-	calc_time_from_processing_all_notes(notes,sinusoid,N,Fs,noteSize);
+	//generate_sinusoids(Fs, Fo, N, sinusoid,noteSize);
+	//calc_time_from_processing_all_notes(notes,sinusoid,N,Fs,noteSize);
 	/*
 	int size = (sizeof(notes)/sizeof(double));
 	int i;
@@ -288,9 +286,9 @@ void main(){
 		printf("%0.5f,\n",notes[i]);
 	system("pause");
 	*/
+/*
 }
-void _222main()
->>>>>>> 2519045ef7f7115e43403d1c236dc673aad957f2
+void _55main()
 {
 	//U16   * sinusoid;
 	double   * sinusoid;
@@ -342,7 +340,7 @@ void _222main()
  	relativePower = pot_freq_(sinusoid, N, Fs,fn);
 	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n", sinusoidPower, relativePower );
 	*/
-	
+	/*
 	// With float samples.	
 	generate_sinusoids_double_samples_multi_notes(Fs, fn, N, sinusoid_double_samples);
 	sinusoidPower = calculate_power_double_samples(sinusoid_double_samples,N);
@@ -362,7 +360,7 @@ void _222main()
 	//relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,600);
 	//printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
 
-
+/*
 	
 	do
 	{
@@ -396,3 +394,36 @@ void _222main()
 }
 
 
+
+void main()
+{
+	U16    sinusoid[N];
+	double sinusoid_double_samples[N];
+	double sinusoidPower, relativePower;
+	int fn = Fo;
+	int i=0;
+	
+	
+	// With integer samples.	
+	generate_sinusoids(Fs, Fo, N, sinusoid);
+	printf("## Integer sinusoid samples ##:\n" );	
+	for(; i<N; ++i)
+		printf("n=%d -> %d \n", i, sinusoid[i] );
+	sinusoidPower = calculate_power(sinusoid,N);
+ 	relativePower = pot_freq_(sinusoid, N, Fs,fn);
+	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n", sinusoidPower, relativePower );
+
+	
+	// With float samples.	
+	generate_sinusoids_double_samples(Fs, Fo, N, sinusoid_double_samples);
+	printf("## Double sinusoid samples ##:\n" );	
+	for( i=0; i<N; ++i)
+		printf("n=%d -> %.3f \n", i, sinusoid_double_samples[i] );
+	sinusoidPower = calculate_power_double_samples(sinusoid_double_samples,N);
+ 	relativePower = pot_freq_double_samples(sinusoid_double_samples, N, Fs,fn);
+	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n\n\n", sinusoidPower, relativePower );
+	system("pause");
+}
+
+
+*/

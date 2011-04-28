@@ -8,7 +8,7 @@ void _inline Work(double * notes, U16* sinusoid, int n, int fs, int notesSize)
 	int idx;
 
 	
-	calculate_power(sinusoid,n);
+	//calculate_power(sinusoid,n);
 	for(idx = 0; idx < notesSize; ++idx)
 	{
 		pot_freq_(sinusoid, n, fs,notes[idx]);

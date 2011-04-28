@@ -79,7 +79,7 @@ typedef struct _goertzel_result_t
 
 typedef struct _goertzel_sample_t
 {
-
+	int sample;
 }goertzel_sample_t;
 
 
