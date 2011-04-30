@@ -51,7 +51,7 @@ namespace GoertzelEvaluater
     public class GoertzelEvaluater
     {
         private const int MINIMUM_FREQUENCIES_IN_SAMPLE = 1;
-        private const int MAXIMUM_FREQUENCIES_IN_SAMPLE = 13;
+        private const int MAXIMUM_FREQUENCIES_IN_SAMPLE = 15;
 
         public struct FrequencyDiff
         {
