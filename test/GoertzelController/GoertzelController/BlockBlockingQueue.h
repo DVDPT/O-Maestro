@@ -170,11 +170,14 @@ public:
 		Monitor::Exit(_monitor);
 	}
 
-	void ReleaseReader(BlockManipulator& br)
+	void ReleaseReader(BlockManipulator& br, unsigned nrOfReads = 1)
 	{
 		Monitor::Enter(_monitor);
 		br._currVersion++;
-		if(! --_currNrOfGets)
+
+		_currNrOfGets -= nrOfReads;
+		
+		if(_currNrOfGets == 0)
 		{
 			///
 			///	this was the last Get that can be done for one specific block

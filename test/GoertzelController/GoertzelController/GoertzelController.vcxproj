@@ -81,6 +81,8 @@
   <ItemGroup>
     <ClInclude Include="BlockBlockingQueue.h" />
     <ClInclude Include="GoertzelController.h" />
+    <ClInclude Include="Interlocked.h" />
+    <ClInclude Include="ManualResetEvent.h" />
     <ClInclude Include="Monitor.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Utils.h" />
