@@ -1,35 +1,18 @@
 #pragma once 
 
+#include "Goertzel.h"
 #include "BlockBlockingQueue.h"
 #include "Thread.h"
 #include "Interlocked.h"
 #include "ManualResetEvent.h"
 
-struct GoertzelFrequency
-{
-	int frequency;	///< the target frequency.
-	double coefficient;	///< the frequency pre-calculated coefficient.
-};
-
-struct GoertzelFrequeciesBlock
-{
-	int blockFs;	///< The Sampling Frequency that all "frequencies" should be captured.
-	int blockN;	///< The size of the block needed to process the "frequencies".
-	int blockNrOfFrequencies;	///< The number of frequencies present in "frequencies".
-	GoertzelFrequency frequencies[];
-};
-
-struct GoertzelResult
-{
-	int frequency;	///< The frequency in question.
-	int percentage;	///< The percentage of the frequency in a given sample.
-};
 
 
 typedef void (*GoertzelControllerCallback)(GoertzelResult * results,int nrOfResults);
 
 
-template <	class SamplesBufferType,
+template <	
+	class SamplesBufferType,
 	int SamplesBufferSize,
 	int Fs,
 	int NrOfFrequencies, 
@@ -176,8 +159,12 @@ class GoertzelController
 
 			for(int i = 0; i < block->blockNrOfFrequencies; ++i)
 			{
-				///	call goertzel (block,i,gc->GetFrequencyResult(freqBlockIdx,i)) 
-
+				Goertzel<SamplesBufferType>::CalculateGoertzel(
+																reader.GetBuffer(),
+																reader.GetBufferSize(),
+																block,
+																gc->GetFrequencyResult(freqBlockIdx,i)
+															  );
 			}
 
 			gc->_samplesQueue.ReleaseReader(reader, block->blockNrOfFrequencies);
@@ -218,10 +205,6 @@ class GoertzelController
 
 		gc->InitializeGoertzelResults();
 
-		///
-		///	Increment results its size to initialize the second array as well;
-		///
-		GoertzelController::ChangeGoertzelResultsBuffer(gc,&ResultsArrayPosition);
 
 		///
 		///	Reset processed Frequencies
@@ -241,11 +224,16 @@ class GoertzelController
 			gc->_controllerEvent.Wait();
 
 			///
-			///	Run Callback
+			///	Store previous results to pass to the callback
 			///
 			GoertzelResult * currentResults = gc->_results;
-
+			
+			///
+			///	Swap to the next results and Initialize 
+			///
 			GoertzelController::ChangeGoertzelResultsBuffer(gc,&ResultsArrayPosition);
+			
+			gc->InitializeGoertzelResults();
 
 			///
 			///	Reset processed Frequencies
@@ -258,9 +246,9 @@ class GoertzelController
 			gc->_filtersEvent.Set();
 
 			///
-			///	Call Callback
+			///	Run Callback
 			///
-
+			gc->_callback(currentResults,NrOfFrequencies);
 		}
 	}
 
@@ -268,7 +256,7 @@ public:
 
 	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelControllerCallback callback) 
 		: 
-	_samplesQueue(_samplesbuffer,SamplesBufferSize,MaxNValue,NrOfFrequencies),
+		_samplesQueue(_samplesbuffer,SamplesBufferSize,MaxNValue,NrOfFrequencies),
 		_frequenciesBlock(freqs),
 		_currProcessedFreqs(NrOfFrequencies),
 		_nrOfFrequenciesBlocks(numberOfBlocks),
