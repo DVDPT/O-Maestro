@@ -127,11 +127,15 @@ void x(int * a)
 	printf("%d\n",*a);
 }
 
+void aa(GoertzelResult * a, int aaa)
+{
+
+}
 void main()
 {
 	
 	Thread<int> a(&x);
-	GoertzelController<short,1234,8800,88,200,5> gController(NULL,2);
+	GoertzelController<short,1234,8800,88,200,5> gController(NULL,2,&aa);
 
 
 }

@@ -26,7 +26,7 @@ struct GoertzelResult
 };
 
 
-
+typedef void (*GoertzelControllerCallback)(GoertzelResult * results,int nrOfResults);
 
 
 template <	class SamplesBufferType,
@@ -94,9 +94,13 @@ class GoertzelController
 	ManualResetEvent _controllerEvent;
 
 	///
+	/// The controller callback, this method will be called when a sample is processed
+	///	
+	GoertzelControllerCallback _callback;
+	
+	///
 	///
 	///	
-
 
 	///																													///
 	///	------------------------------------------------	Methods	----------------------------------------------------///
@@ -262,7 +266,7 @@ class GoertzelController
 
 public:
 
-	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks) 
+	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelControllerCallback callback) 
 		: 
 	_samplesQueue(_samplesbuffer,SamplesBufferSize,MaxNValue,NrOfFrequencies),
 		_frequenciesBlock(freqs),
@@ -270,7 +274,8 @@ public:
 		_nrOfFrequenciesBlocks(numberOfBlocks),
 		_filtersEvent(false),
 		_controllerEvent(false),
-		_results(_resultsBuffer)
+		_results(_resultsBuffer),
+		_callback(callback)
 
 	{
 		///
