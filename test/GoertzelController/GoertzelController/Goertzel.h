@@ -32,7 +32,7 @@ class Goertzel
 
 	static inline double CalculateFrequencyPower(double relativePower, int n)
 	{
-		return 2 * relativePower / n;
+		return 2 * relativePower / n;  
 	}
 
 public:

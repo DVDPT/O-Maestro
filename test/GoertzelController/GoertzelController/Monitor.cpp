@@ -1,6 +1,6 @@
 #include "Monitor.h"
 
- Monitor::Monitor()
+Monitor::Monitor()
 {
 	InitializeConditionVariable(&_condVar);
 	InitializeCriticalSection(&_lock);

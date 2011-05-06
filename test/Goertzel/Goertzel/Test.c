@@ -65,7 +65,7 @@ static double calculate_power_double_samples(double* sinusoid, int size)
 	return sum;
 }
 
-void main()
+void main123()
 {
 	U16    sinusoid[N];
 	double sinusoid_double_samples[N];
