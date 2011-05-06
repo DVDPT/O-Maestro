@@ -58,7 +58,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -75,14 +75,18 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BlockBlockingQueue.cpp" />
-    <ClCompile Include="GoertzelController.cpp" />
     <ClCompile Include="Monitor.cpp" />
+    <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlockBlockingQueue.h" />
+    <ClInclude Include="Goertzel.h" />
     <ClInclude Include="GoertzelController.h" />
+    <ClInclude Include="Interlocked.h" />
+    <ClInclude Include="ManualResetEvent.h" />
     <ClInclude Include="Monitor.h" />
+    <ClInclude Include="Thread.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
