@@ -61,6 +61,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="goertzel.c" />
+    <ClCompile Include="GoertzelValues.c" />
     <ClCompile Include="goertzel_controller.c" />
     <ClCompile Include="goertzel_evaluator.c" />
     <ClCompile Include="program.c" />
@@ -71,6 +72,7 @@
   <ItemGroup>
     <ClInclude Include="bounded_queue.h" />
     <ClInclude Include="goertzel.h" />
+    <ClInclude Include="GoertzelStructs.h" />
     <ClInclude Include="goertzel_controller.h" />
     <ClInclude Include="goertzel_evaluator.h" />
     <ClInclude Include="HeaderWav.h" />

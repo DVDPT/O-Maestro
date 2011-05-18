@@ -97,13 +97,14 @@ namespace GoertzelEvaluater
             return generatedFrequencies;
         }
 
-        private static void CalculateCoefficientFromFrequencies(GoertzelFrequencies[] generatedFrequencies)
+        private void CalculateCoefficientFromFrequencies(GoertzelFrequencies[] generatedFrequencies)
         {
             foreach (GoertzelFrequencies goertzelFrequency in generatedFrequencies)
             {
+                int relativeFreq = _fs/goertzelFrequency.Fs;
                 foreach (GoertzelFrequency freq in goertzelFrequency.Frequencies)
                 {
-                    freq.Coefficient = (2 * Math.Cos(2 * Math.PI * freq.Frequency / goertzelFrequency.Fs));
+                    freq.Coefficient = (2 * Math.Cos(2 * Math.PI * ((double)freq.Frequency / (double)relativeFreq)/ (double)goertzelFrequency.Fs)) ;
                     freq.K = goertzelFrequency.N * freq.Frequency / goertzelFrequency.Fs;
                 }
             }
