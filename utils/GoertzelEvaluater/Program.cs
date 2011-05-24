@@ -10,14 +10,14 @@ namespace GoertzelEvaluater
     {
         private const int FS = 8800;
         private const int MAX_N = 200;
-        private const int MIN_N = 20;
+        private const int MIN_N = 200;
 
         static void Main(string[] args)
         {
             var ge = new GoertzelEvaluater(FS,MAX_N,MIN_N);
-            GoertzelFrequencies[] freqs = ge.Evaluate(notes);
+            GoertzelFrequenciesBlock[] freqs = ge.Evaluate(notes);
             //
-            foreach (GoertzelFrequencies goertzelFrequency in freqs)
+            foreach (GoertzelFrequenciesBlock goertzelFrequency in freqs)
             {
                 Console.WriteLine(goertzelFrequency);
             }
@@ -26,7 +26,7 @@ namespace GoertzelEvaluater
 
         }
 
-        private static void PrintFreqs(GoertzelFrequencies[] freqs, TextWriter writer )
+        private static void PrintFreqs(GoertzelFrequenciesBlock[] freqs, TextWriter writer )
         {
             int block = 0;
             foreach (var freq in freqs)
@@ -53,12 +53,14 @@ namespace GoertzelEvaluater
                 block++;
             }
 
-            writer.WriteLine("GoertzelFrequeciesBlock const goertzelBlocks[] = {");
+            writer.WriteLine("GoertzelFrequeciesBlock const blocks[] = {");
+            
             for (int i = 0; i < block; ++i)
             {
                 writer.WriteLine("\t &block{0} ,",i);
             }
             writer.WriteLine("};");
+            writer.WriteLine("GoertzelFrequeciesBlock** goertzelBlocks = blocks;");
         }
 
 

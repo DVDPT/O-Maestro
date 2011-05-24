@@ -1,22 +1,23 @@
 #include "goertzel.h"
 #include "GoertzelStructs.h"
+
 #define __N  (200)
 #define __A  (1000)	
 
 
 const int __Fs = 8800; //hz
-const int __Fo = 220;
-const int __Fo2 = 55;
-const int __Fo3 = 61;
+const double __Fo = 27.5;
+const double __Fo2 = 55;
+const double __Fo3 = 61;
 
-static void generate_sinusoids(int fs, int fo, int size, U16 * sinusoid)
+static void generate_sinusoids(int fs, double fo, int size, U16 * sinusoid)
 {
 	int i = 0;
 	for(;i < size ; ++i)
 	{
-		sinusoid[i] = (U16)(__A * sin((2*PI*fo*i) / (float)fs))  
-					  //+(U16)(__A * sin((2*PI*__Fo3*i) / (float)fs)) +
-					  ;//(U16)(__A * sin((2*PI*__Fo2*i) / (float)fs));
+		sinusoid[i] = (U16)(__A * sin((2*PI*__Fo*i) / (float)fs))  /*
+					  +(U16)(__A * sin((2*PI*__Fo3*i) / (float)fs)) +
+					  (U16)(__A * sin((2*PI*__Fo2*i) / (float)fs))*/;
 	}
 }
 
@@ -47,16 +48,15 @@ static double calculate_power(U16 * sinusoid, int size)
 	//double k = 200 * fn / fs;
 	//return 2 * cos(2*PI/200*k);
 }
-static void CalculateGoertzel(U16 * samples, int samplesSize,double coef,int blockn, int freq)
+static void CalculateGoertzel(U16 * samples, int samplesSize,double coef, int freq,int fs)
 {
 		double Q0,Q1,Q2;
 		double  relativePower;
 		double sum = 0;
-		int i,j = 0;
+		int i;
 		float percentage=0;
-		
 		Q0 = Q1 = Q2 = 0;
-		for(i = 0; i < samplesSize && j < blockn ; i++,j++)
+		for(i = 0; i < samplesSize  ; i++)
 		{
 			Q0 = samples[i] + (coef * Q1) - Q2 ;
 			Q2 = Q1;
@@ -64,7 +64,11 @@ static void CalculateGoertzel(U16 * samples, int samplesSize,double coef,int blo
 			sum += samples[i]*samples[i];
 
 		}
-		relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , blockn);
+		if(freq == 440)
+		{
+			freq++;
+		}
+		relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , samplesSize);
 		percentage = ((relativePower)* 100 )/sum;
 		if(percentage > 10)
 			printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% || Coef: %f\n", sum, relativePower,freq,percentage,coef  );
@@ -104,8 +108,8 @@ int main()
 			CalculateGoertzel(sinusoid,
 							  __N,
 							  block->frequencies[j].coefficient,
-							  __N,
-							  block->frequencies[j].frequency);
+							  block->frequencies[j].frequency,
+							  block->blockFs);
 		}
 	}
 	//*/
