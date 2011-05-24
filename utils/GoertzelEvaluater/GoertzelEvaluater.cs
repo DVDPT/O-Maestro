@@ -15,7 +15,7 @@ namespace GoertzelEvaluater
 
     }
 
-    public class GoertzelFrequencies
+    public class GoertzelFrequenciesBlock
     {
 
         public void AddFrequency(GoertzelFrequency f)
@@ -87,7 +87,7 @@ namespace GoertzelEvaluater
 
 
 
-        public GoertzelFrequencies[] Evaluate(double[] freqs)
+        public GoertzelFrequenciesBlock[] Evaluate(double[] freqs)
         {
             freqs = freqs.OrderBy(d => d).ToArray();
             var diffs = CalculateDiff(freqs);
@@ -97,13 +97,14 @@ namespace GoertzelEvaluater
             return generatedFrequencies;
         }
 
-        private static void CalculateCoefficientFromFrequencies(GoertzelFrequencies[] generatedFrequencies)
+        private void CalculateCoefficientFromFrequencies(GoertzelFrequenciesBlock[] generatedFrequenciesBlock)
         {
-            foreach (GoertzelFrequencies goertzelFrequency in generatedFrequencies)
+            foreach (GoertzelFrequenciesBlock goertzelFrequency in generatedFrequenciesBlock)
             {
+               
                 foreach (GoertzelFrequency freq in goertzelFrequency.Frequencies)
                 {
-                    freq.Coefficient = (2 * Math.Cos(2 * Math.PI * freq.Frequency / goertzelFrequency.Fs));
+                    freq.Coefficient = (2 * Math.Cos(2 * Math.PI * freq.Frequency / (double)goertzelFrequency.Fs)) ;
                     freq.K = goertzelFrequency.N * freq.Frequency / goertzelFrequency.Fs;
                 }
             }
@@ -111,15 +112,15 @@ namespace GoertzelEvaluater
             
         }
 
-        private GoertzelFrequencies[] GenerateGoertzelFrequencies(FrequencyDiff[] diffs)
+        private GoertzelFrequenciesBlock[] GenerateGoertzelFrequencies(FrequencyDiff[] diffs)
         {
-            var ret = new List<GoertzelFrequencies>();
+            var ret = new List<GoertzelFrequenciesBlock>();
             var currN = _minN;
             var currFs = _fs;
             double delta; 
            
             
-            var gf = new GoertzelFrequencies();
+            var gf = new GoertzelFrequenciesBlock();
             gf.AddFrequency(new GoertzelFrequency{Frequency = diffs[0].Frequency});
             for (var i = 1; i < diffs.Length; i++)
             {
@@ -134,7 +135,7 @@ namespace GoertzelEvaluater
                         gf.Fs = currFs;
                         gf.N = currN;
                         ret.Add(gf);
-                        gf = new GoertzelFrequencies();
+                        gf = new GoertzelFrequenciesBlock();
                         currN = _minN;
                         currFs = _fs;
                         

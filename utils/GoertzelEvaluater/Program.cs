@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -9,15 +10,57 @@ namespace GoertzelEvaluater
     {
         private const int FS = 8800;
         private const int MAX_N = 200;
-        private const int MIN_N = 20;
+        private const int MIN_N = 200;
 
         static void Main(string[] args)
         {
             var ge = new GoertzelEvaluater(FS,MAX_N,MIN_N);
-            foreach (GoertzelFrequencies goertzelFrequency in ge.Evaluate(notes))
+            GoertzelFrequenciesBlock[] freqs = ge.Evaluate(notes);
+            //
+            foreach (GoertzelFrequenciesBlock goertzelFrequency in freqs)
             {
                 Console.WriteLine(goertzelFrequency);
             }
+            //*/
+            //PrintFreqs(freqs,Console.Out);
+
+        }
+
+        private static void PrintFreqs(GoertzelFrequenciesBlock[] freqs, TextWriter writer )
+        {
+            int block = 0;
+            foreach (var freq in freqs)
+            {
+
+                writer.WriteLine("GoertzelFrequency const block{0}Freqs[] = \n{{", block);
+                foreach (var goertzelFrequency in freq.Frequencies)
+                {
+                    writer.WriteLine("\t{{ {0}, {1} }},",
+                                            goertzelFrequency.Frequency.ToString().Replace(',','.'),
+                                            goertzelFrequency.Coefficient.ToString().Replace(',','.')
+                                     );
+                }
+                writer.WriteLine("};");
+
+                writer.WriteLine("GoertzelFrequeciesBlock const block{0} = {{ {1}, {2}, {3}, {4},block{0}Freqs }};",
+                                    block,
+                                    freq.Fs,
+                                    freq.N,
+                                    FS / freq.Fs,
+                                    freq.Frequencies.Length
+                                );
+
+                block++;
+            }
+
+            writer.WriteLine("GoertzelFrequeciesBlock const blocks[] = {");
+            
+            for (int i = 0; i < block; ++i)
+            {
+                writer.WriteLine("\t &block{0} ,",i);
+            }
+            writer.WriteLine("};");
+            writer.WriteLine("GoertzelFrequeciesBlock** goertzelBlocks = blocks;");
         }
 
 

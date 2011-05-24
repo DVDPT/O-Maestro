@@ -7,13 +7,15 @@ struct GoertzelFrequency
 	double coefficient;	///< the frequency pre-calculated coefficient.
 };
 
+
+
 struct GoertzelFrequeciesBlock
 {
 	int blockFs;	///< The Sampling Frequency that all "frequencies" should be captured.
 	int blockN;	///< The size of the block needed to process the "frequencies".
 	int blockFsDivFs; ///< Fs / blockFs
 	int blockNrOfFrequencies;	///< The number of frequencies present in "frequencies".
-	GoertzelFrequency frequencies[];
+	GoertzelFrequency* frequencies;
 };
 
 struct GoertzelResult

@@ -1,22 +1,23 @@
 #include "goertzel.h"
+#include "GoertzelStructs.h"
 
-#define __N  (8800)
+#define __N  (200)
 #define __A  (1000)	
 
 
 const int __Fs = 8800; //hz
-const int __Fo = 440;
-const int __Fo2 = 55;
-const int __Fo3 = 110;
+const double __Fo = 27.5;
+const double __Fo2 = 55;
+const double __Fo3 = 61;
 
-static void generate_sinusoids(int fs, int fo, int size, U16 * sinusoid)
+static void generate_sinusoids(int fs, double fo, int size, U16 * sinusoid)
 {
 	int i = 0;
 	for(;i < size ; ++i)
 	{
-		sinusoid[i] = (U16)(__A * sin((2*PI*fo*i) / (float)fs)) + 
-					  (U16)(__A * sin((2*PI*__Fo3*i) / (float)fs)) +
-					  (U16)(__A * sin((2*PI*__Fo2*i) / (float)fs));
+		sinusoid[i] = (U16)(__A * sin((2*PI*__Fo*i) / (float)fs))  /*
+					  +(U16)(__A * sin((2*PI*__Fo3*i) / (float)fs)) +
+					  (U16)(__A * sin((2*PI*__Fo2*i) / (float)fs))*/;
 	}
 }
 
@@ -47,15 +48,15 @@ static double calculate_power(U16 * sinusoid, int size)
 	//double k = 200 * fn / fs;
 	//return 2 * cos(2*PI/200*k);
 }
-static void CalculateGoertzel(U16 * samples, int samplesSize,double coef,int blockn, int blockfsdivfs, int freq, int fs)
-	{
+static void CalculateGoertzel(U16 * samples, int samplesSize,double coef, int freq,int fs)
+{
 		double Q0,Q1,Q2;
 		double  relativePower;
 		double sum = 0;
-		int i,j = 0;
-		coef = calculate_coefficient(fs,freq);
+		int i;
+		float percentage=0;
 		Q0 = Q1 = Q2 = 0;
-		for(i = 0; i < samplesSize && j < blockn ; i+=blockfsdivfs,j++)
+		for(i = 0; i < samplesSize  ; i++)
 		{
 			Q0 = samples[i] + (coef * Q1) - Q2 ;
 			Q2 = Q1;
@@ -63,22 +64,31 @@ static void CalculateGoertzel(U16 * samples, int samplesSize,double coef,int blo
 			sum += samples[i]*samples[i];
 
 		}
-		printf("%d\n",j);
-		relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , blockn);
-		printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% \n", sum, relativePower,freq,((relativePower)* 100 )/sum  );
+		if(freq == 440)
+		{
+			freq++;
+		}
+		relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , samplesSize);
+		percentage = ((relativePower)* 100 )/sum;
+		if(percentage > 10)
+			printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% || Coef: %f\n", sum, relativePower,freq,percentage,coef  );
 
-	}
+}
 
+
+extern GoertzelFrequeciesBlock** goertzelBlocks;
 
 int main()
 {
+
+	
 	U16    sinusoid[__N];
 	double sinusoid_double_samples[__N];
+
+	GoertzelFrequeciesBlock*  block;
 	double sinusoidPower, relativePower;
 	int fn = __Fo;
-	int i=0;
-
-
+	int i=0,j=0;
 	// With integer samples.	
 	generate_sinusoids(__Fs, __Fo, __N, sinusoid);
 	printf("## Integer sinusoid samples ##:\n" );	
@@ -89,10 +99,25 @@ int main()
 	relativePower = pot_freq_(sinusoid, __N, __Fs,fn);
 	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% \n", sinusoidPower, relativePower,__Fo,(relativePower * 100 )/sinusoidPower  );
 	*/
-
-	//CalculateGoertzel(sinusoid,__N,0.618033988749895,106,4,440,2200);
-	//CalculateGoertzel(sinusoid,__N,0.618033988749895,169,32,55,275);
-	CalculateGoertzel(sinusoid,__N,0.618033988749895,150,16,110,550);
+	//
+	for(;i < 6; ++i)
+	{
+		block = goertzelBlocks[i];
+		for(j = 0; j < block->blockNrOfFrequencies;++j)
+		{
+			CalculateGoertzel(sinusoid,
+							  __N,
+							  block->frequencies[j].coefficient,
+							  block->frequencies[j].frequency,
+							  block->blockFs);
+		}
+	}
+	//*/
+	/*/
+	CalculateGoertzel(sinusoid,__N,1.90211303259031,__N,4,440/4,2200);
+	CalculateGoertzel(sinusoid,__N,1.99845807248145,__N,32,55/32,275);
+	CalculateGoertzel(sinusoid,__N,1.99383466746626,__N,16,110/16,550);
+	//*/
 	system("pause");
 	return 1;
 }

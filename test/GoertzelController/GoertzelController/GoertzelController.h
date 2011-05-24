@@ -159,12 +159,12 @@ class GoertzelController
 
 			for(int i = 0; i < block->blockNrOfFrequencies; ++i)
 			{
-				Goertzel<SamplesBufferType>::CalculateGoertzel(
+				/*Goertzel<SamplesBufferType>::CalculateGoertzel(
 																reader.GetBuffer(),
 																reader.GetBufferSize(),
 																block,
 																gc->GetFrequencyResult(freqBlockIdx,i)
-															  );
+															  );*/
 			}
 
 			gc->_samplesQueue.ReleaseReader(reader, block->blockNrOfFrequencies);
