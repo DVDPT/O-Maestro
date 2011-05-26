@@ -47,7 +47,9 @@ void GPIO::outValue(U32 pin, U32 value, U32 mask)
 }
 
 /*      					Funções Publicas				*/
+int volatile i=0;
 
+void GPIO::ShutDown(){}
 
 
 void GPIO::setPinWrite(U32 pin, U32 size)
@@ -74,3 +76,4 @@ U32 GPIO::readValue(U32 pin, U32 size)
 }
 
 
+GPIO x;

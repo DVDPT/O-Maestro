@@ -10,11 +10,13 @@
 
 #pragma once
 
-class GPIO : public IDrive{
+class GPIO: public IDrive{
 
 private:
 
 	LPC22xxP_GPIO gpio;
+
+
 
 	void pinSelect(U32 pin);
 	void setPin(U32 maskPin);
@@ -28,10 +30,16 @@ public:
 
 	/*Metodos Herdados da Interface IDrive*/
 
-	virtual void Init(){}
-	virtual void ShutDown(){}
+	// void Init();
+	// void ShutDown();
 
 	/* Metodos do objecto GPIO*/
+
+	virtual void Init(){
+		gpio->IODIR=0;
+	}
+	virtual void ShutDown();
+
 
 	void setPinWrite(U32 pin, U32 size);
 	void setPinRead(U32 pin, U32 size);

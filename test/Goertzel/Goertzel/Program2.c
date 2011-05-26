@@ -1,12 +1,12 @@
 #include "goertzel.h"
 #include "GoertzelStructs.h"
 
-#define __N  (200)
+#define __N  (800)
 #define __A  (1000)	
 
 
 const int __Fs = 8800; //hz
-const double __Fo = 27.5;
+const double __Fo = 220;
 const double __Fo2 = 55;
 const double __Fo3 = 61;
 
@@ -48,15 +48,16 @@ static double calculate_power(U16 * sinusoid, int size)
 	//double k = 200 * fn / fs;
 	//return 2 * cos(2*PI/200*k);
 }
-static void CalculateGoertzel(U16 * samples, int samplesSize,double coef, int freq,int fs)
+static void CalculateGoertzel(U16 * samples, int samplesSize,double coef, int freq,int jump, int blockn)
 {
 		double Q0,Q1,Q2;
 		double  relativePower;
 		double sum = 0;
-		int i;
+		int i,j=0;
 		float percentage=0;
 		Q0 = Q1 = Q2 = 0;
-		for(i = 0; i < samplesSize  ; i++)
+		
+		for(i = 0; j<blockn && i < samplesSize  ;j++, i+=jump)
 		{
 			Q0 = samples[i] + (coef * Q1) - Q2 ;
 			Q2 = Q1;
@@ -64,16 +65,17 @@ static void CalculateGoertzel(U16 * samples, int samplesSize,double coef, int fr
 			sum += samples[i]*samples[i];
 
 		}
-		if(freq == 440)
+		if(freq==110)
 		{
 			freq++;
 		}
-		relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , samplesSize);
+		//sum = calculate_power(samples,samplesSize);
+		relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , j);
 		percentage = ((relativePower)* 100 )/sum;
 		if(percentage > 10)
 			printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% || Coef: %f\n", sum, relativePower,freq,percentage,coef  );
 
-}
+ }
 
 
 extern GoertzelFrequeciesBlock** goertzelBlocks;
@@ -83,6 +85,7 @@ int main()
 
 	
 	U16    sinusoid[__N];
+
 	double sinusoid_double_samples[__N];
 
 	GoertzelFrequeciesBlock*  block;
@@ -109,7 +112,8 @@ int main()
 							  __N,
 							  block->frequencies[j].coefficient,
 							  block->frequencies[j].frequency,
-							  block->blockFs);
+							  block->blockFsDivFs,
+							  block->blockN);
 		}
 	}
 	//*/
