@@ -17,7 +17,7 @@ GoertzelFrequency const block0Freqs[] =
 	{ 58.2705, 0.474307674113196 },
 	{ 61.7354, 0.319167936733305 },
 };
-GoertzelFrequeciesBlock const block0 = { 275, 200, 32, 15,block0Freqs };
+GoertzelFrequeciesBlock const block0 = { 275, 169, 32, 15,block0Freqs };
 GoertzelFrequency const block1Freqs[] =
 {
 	{ 65.4064, 1.46718785998182 },
@@ -36,7 +36,7 @@ GoertzelFrequency const block1Freqs[] =
 	{ 138.591, -0.0249264643508869 },
 	{ 146.832, -0.21281338488139 },
 };
-GoertzelFrequeciesBlock const block1 = { 550, 200, 16, 15,block1Freqs };
+GoertzelFrequeciesBlock const block1 = { 550, 150, 16, 15,block1Freqs };
 GoertzelFrequency const block2Freqs[] =
 {
 	{ 155.563, 1.2610393255485 },
@@ -55,7 +55,7 @@ GoertzelFrequency const block2Freqs[] =
 	{ 329.628, -0.613990874516521 },
 	{ 349.228, -0.822799650085379 },
 };
-GoertzelFrequeciesBlock const block2 = { 1100, 200, 8, 15,block2Freqs };
+GoertzelFrequeciesBlock const block2 = { 1100, 126, 8, 15,block2Freqs };
 GoertzelFrequency const block3Freqs[] =
 {
 	{ 369.994, 0.983495691286584 },
@@ -74,7 +74,7 @@ GoertzelFrequency const block3Freqs[] =
 	{ 783.991, -1.23926866371561 },
 	{ 830.609, -1.43668580578722 },
 };
-GoertzelFrequeciesBlock const block3 = { 2200, 200, 4, 15,block3Freqs };
+GoertzelFrequeciesBlock const block3 = { 2200, 106, 4, 15,block3Freqs };
 GoertzelFrequency const block4Freqs[] =
 {
 	{ 880, 1.61803398874989 },
@@ -93,7 +93,7 @@ GoertzelFrequency const block4Freqs[] =
 	{ 1864.66, 0.474302125075554 },
 	{ 1975.53, 0.319171883881374 },
 };
-GoertzelFrequeciesBlock const block4 = { 8800, 200, 1, 15,block4Freqs };
+GoertzelFrequeciesBlock const block4 = { 8800, 179, 1, 15,block4Freqs };
 GoertzelFrequency const block5Freqs[] =
 {
 	{ 2093, 0.152647050869377 },
@@ -110,7 +110,7 @@ GoertzelFrequency const block5Freqs[] =
 	{ 3951.07, -1.89813380784295 },
 	{ 4186.01, -1.97670105124705 },
 };
-GoertzelFrequeciesBlock const block5 = { 8800, 200, 1, 13,block5Freqs };
+GoertzelFrequeciesBlock const block5 = { 8800, 75, 1, 13,block5Freqs };
 GoertzelFrequeciesBlock const blocks[] = {
 	&block0 ,
 	&block1 ,
@@ -119,6 +119,4 @@ GoertzelFrequeciesBlock const blocks[] = {
 	&block4 ,
 	&block5 ,
 };
-
-
 GoertzelFrequeciesBlock** goertzelBlocks = blocks;

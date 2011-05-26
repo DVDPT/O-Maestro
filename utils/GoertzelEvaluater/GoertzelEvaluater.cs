@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -28,7 +29,13 @@ namespace GoertzelEvaluater
         public int Fs;
         public int NrFrequencys;
         public int N;
+        public List<double> _filterValues = new List<double>();
+
+        
+        
         private List<GoertzelFrequency> _freqs = new List<GoertzelFrequency>();
+
+        public List<double> FilterValues { get { return _filterValues; } }
         public GoertzelFrequency[] Frequencies { get { return _freqs.ToArray(); } }
 
         public override string ToString()
@@ -117,15 +124,24 @@ namespace GoertzelEvaluater
             var ret = new List<GoertzelFrequenciesBlock>();
             var currN = _minN;
             var currFs = _fs;
-            double delta; 
-           
-            
+            var lastGoodN = 0;
+            var lastGoodFs = 0;
+            double delta;
+
+            var exception = false;
             var gf = new GoertzelFrequenciesBlock();
             gf.AddFrequency(new GoertzelFrequency{Frequency = diffs[0].Frequency});
+
             for (var i = 1; i < diffs.Length; i++)
             {
                 CalculateDelta(currFs,currN,out delta);
-                if (delta < diffs[i].DiffFromLast)
+                //if (delta < diffs[i].DiffFromLast)
+                //{
+                //    lastGoodFs = currFs;
+                //    lastGoodN = currN;
+                //}
+
+                if (delta < diffs[i].DiffFromLast /*&& exception*/)
                 {
                     gf.AddFrequency(new GoertzelFrequency{Frequency = diffs[i].Frequency,DiffFromLast = diffs[i].DiffFromLast});
 
@@ -138,13 +154,24 @@ namespace GoertzelEvaluater
                         gf = new GoertzelFrequenciesBlock();
                         currN = _minN;
                         currFs = _fs;
-                        
+                        exception = false;
+
                     }
                 }
                 else
                 {
-                    GetAnotherConfiguration(ref currN, ref currFs, diffs[i]);
-                    i = i - 1;
+                    try
+                    {
+                        GetAnotherConfiguration(ref currN, ref currFs, diffs[i]);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        //exception = true;
+                        //currN = lastGoodN;
+                        //currFs = lastGoodFs;
+
+                    }
+                        i = i - 1;
                 }
       
             }
