@@ -29,14 +29,12 @@ namespace GoertzelEvaluater
         public int Fs;
         public int NrFrequencys;
         public int N;
-        public List<double> _lowFilterValues = new List<double>();
-        public List<double> _highFilterValues = new List<double>();
+        public List<double> _filterValues = new List<double>();
         
         
         private List<GoertzelFrequency> _freqs = new List<GoertzelFrequency>();
 
-        public List<double> LowFilterValues { get { return _lowFilterValues; } }
-        public List<double> HighFilterValues { get { return _highFilterValues; } }
+        public List<double> FilterValues { get { return _filterValues; } }
         public GoertzelFrequency[] Frequencies { get { return _freqs.ToArray(); } }
 
         public override string ToString()

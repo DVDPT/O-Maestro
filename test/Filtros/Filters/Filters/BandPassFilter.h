@@ -1,4 +1,4 @@
-
+#pragma once
 #include "LowPassFilter.h"
 
 class BandPassFilter

@@ -1,6 +1,5 @@
 #include "goertzel.h"
 #include "GoertzelStructs.h"
-#include "classtest.h"
 #define __N  (2200)
 #define __A  (1000)	
 

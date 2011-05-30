@@ -67,9 +67,7 @@ namespace GoertzelEvaluater
             
             Console.WriteLine("\nFilter values for band pass filter between {0} and {1} with fc:",smallerFrequency,biggestFrequency);
             Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
-            GetFilterValues(smallerFrequencyW0, block.LowFilterValues);
-            Console.WriteLine("\nFilter values for {0} ", biggestFrequency); 
-            GetFilterValues(biggestFrequencyW0, block.HighFilterValues);
+            GetFilterValues(smallerFrequencyW0, biggestFrequencyW0, block.FilterValues);
 
 
 
@@ -86,7 +84,7 @@ namespace GoertzelEvaluater
 
         private static double LowPassFilter(double w0, int idx)
         {
-            return (w0/Math.PI)*sinc(w0*idx/Math.PI);
+            return (w0/Math.PI)*sinc((w0/Math.PI)*idx);
         }
 
         private static double sinc(double value)
@@ -95,14 +93,18 @@ namespace GoertzelEvaluater
                 return 1;
             if (value == 1 || value == 2)
                 return 0;
-            return Math.Sin(value)/value;
+            return Math.Sin(Math.PI * value)/(Math.PI * value);
         }
         
-        private static void GetFilterValues(double w0, List<double> filter)
+        private static double Hamming(int idx, int nrOfPoints)
+        {
+            return 0.54 + 0.46*Math.Cos((2*Math.PI*idx)/(nrOfPoints));
+        }
+        private static void GetFilterValues(double w0, double w1, List<double> filter)
         {
             for (int i = -(Program.FILTER_POINTS / 2) + 1; i < Program.FILTER_POINTS / 2; ++i)
             {
-                var hi = LowPassFilter(w0, i);
+                var hi = (LowPassFilter(w1,i) - LowPassFilter(w0, i) )* Hamming(i,Program.NR_OF_POINTS) ;
                 Console.WriteLine("h({0}) = {1}", i, hi);
                 filter.Add(hi);
             }
