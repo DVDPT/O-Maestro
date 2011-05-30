@@ -4,7 +4,7 @@
 #define PI (4*atan(1.0)) 
 #define sinc(alfa) ((sin(alfa*PI))/(alfa*PI))
 #define N (200)
-#define NumberOfCofficients 11
+#define NumberOfCofficients 19
 
 
 class LowPassFilter

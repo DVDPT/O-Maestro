@@ -43,13 +43,13 @@ void  LowPassFilter::putPreviousSample(short sample)
 short LowPassFilter:: Filtrate(short sample)
 {
 	
-	short sampleFilter=sample * cofficients[0];
-	putPreviousSample(sample);
+	short sampleFilterv= sample * cofficients[0];
+	double sum = 0;
 
 	for(int i=1; i<NumberOfCofficients;i++)
 	{	
-		sampleFilter += (cofficients[i]* getPreviousSample());
+		sum += (cofficients[i]* getPreviousSample());
 	}
-	
-	return sampleFilter;
+	putPreviousSample(sample);
+	return sum;
 }
