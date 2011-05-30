@@ -18,6 +18,8 @@ namespace GoertzelEvaluater
         {
             var ge = new GoertzelEvaluater(FS,MAX_N,MIN_N);
             GoertzelFrequenciesBlock[] freqs = ge.Evaluate(notes);
+
+
             /*/
             foreach (GoertzelFrequenciesBlock goertzelFrequency in freqs)
             {
@@ -28,10 +30,11 @@ namespace GoertzelEvaluater
             freqs.GenerateFiltersValues();
             freqs.PrintStructDefinitions(Console.Out);
             //*/
-            freqs.GenerateFiltersValues();
+            //freqs.GenerateFiltersValues();
 
-            PrintFilterCoefs(freqs, Console.Out);
+            //PrintFilterCoefs(freqs, Console.Out);
 
+            Console.WriteLine(10%10);
         }
 
         private static void PrintFilterCoefs(GoertzelFrequenciesBlock[] freqs, TextWriter writer)

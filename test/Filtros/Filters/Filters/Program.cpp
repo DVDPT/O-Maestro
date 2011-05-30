@@ -11,7 +11,7 @@
 
 
 const int __Fs = 8800; //hz
-double nmefodas [NumberOfCofficients]=
+double otherFilterCoefs [31]=
 {
 	
 		0.000621141319362756,
@@ -48,7 +48,7 @@ double nmefodas [NumberOfCofficients]=
 	
 };
 
-double  cofficientFilterSmall [NumberOfCofficients]={
+double  cofficientFilterSmall []={
 	0.00203312425186716,
 	-0.00395315905295945,
 	0.0012446967875125,
@@ -207,14 +207,14 @@ int main()
 	//
 
 	LowPassFilter lpf(cofficientFilterSmall);
-	LowPassFilter lpf2(nmefodas);
+	LowPassFilter lpf2(otherFilterCoefs);
 
 
 	printf("\nBefore Filtering \n");
 	RunGoertzelOnAllFreqs(goertzelBlocks, sinusoid);
 
 	for(i = 0; i < __N; ++i)
-		sinusoid[i] = lpf.Filtrate(sinusoid[i]);
+		sinusoid[i] = lpf.Filter(sinusoid[i]);
 
 	printf("\n----------------------------After Filtering\n-----------------------------");
 

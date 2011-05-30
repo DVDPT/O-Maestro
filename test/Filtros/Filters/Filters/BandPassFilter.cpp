@@ -8,8 +8,8 @@ BandPassFilter::BandPassFilter(double * cofficientsToFilterSmallFreq, double * c
 short BandPassFilter:: Filtrate(short sample)
 {
 
-	short sampleFilterSmallFrequency = lowPassFilterToSmallFrequency.Filtrate(sample);
-	short sampleFilterBiggestFrequency = lowPassFilterToBiggestFrequency.Filtrate(sample);
+	short sampleFilterSmallFrequency = lowPassFilterToSmallFrequency.Filter(sample);
+	short sampleFilterBiggestFrequency = lowPassFilterToBiggestFrequency.Filter(sample);
 
 	return sampleFilterBiggestFrequency - sampleFilterSmallFrequency;
 

@@ -4,58 +4,54 @@
 
 
 
-LowPassFilter::LowPassFilter(double * cofficientsToFilter)
+LowPassFilter::LowPassFilter(double * cofficientsToFilter) 
+	: 
+	_currGet(0),
+	_currPut(0),
+	_cofficients(cofficientsToFilter)
+															 
 {
-	for(int i=0; i<NumberOfCofficients; i++)
+	for(int i=0; i<PREVIOUS_SAMPLES_BUFFER_SIZE; i++)
 	{
-		cofficients[i] = cofficientsToFilter[i];
-		previousSamples[i]=0;
+		_previousSamples[i]=0;
 	}
-	currIdxGetPreviousSamples=0;
-	currIdxPutPreviousSamples=0;
 	
 }
 
 
 
-short LowPassFilter::getPreviousSample()
+short LowPassFilter::GetPreviousSample()
 {
 
-	short value = previousSamples[currIdxGetPreviousSamples--];
-	if(currIdxGetPreviousSamples < 0 )
+	short value = _previousSamples[_currGet--];
+	if(_currGet < 0 )
 	{
-		currIdxGetPreviousSamples = NumberOfCofficients-1;
+		_currGet = PREVIOUS_SAMPLES_BUFFER_SIZE-1;
 	}
 	return value;
 
 }
-int  LowPassFilter::putPreviousSample(short sample)
+unsigned int LowPassFilter::PutCurrentSample(short sample)
 {
-	int oldPut = currIdxPutPreviousSamples;
+	int oldPut = _currPut;
 
-	previousSamples[currIdxPutPreviousSamples++]= sample;
-	if(currIdxPutPreviousSamples == NumberOfCofficients)
-	{
-		currIdxPutPreviousSamples = 0;
-	}
+	_previousSamples[_currPut++]= sample;
+
+	_currPut %= PREVIOUS_SAMPLES_BUFFER_SIZE;
 
 	return oldPut;
 	
 }
 
 
-short LowPassFilter:: Filtrate(short sample)
-{
-	
+short LowPassFilter:: Filter(short sample)
+{	
+	double sampleFiltered = sample * _cofficients[0];
 
-	
-	short sampleFilterv= sample * cofficients[0];
-	double sum = sampleFilterv;
-
-	for(int i=1; i<NumberOfCofficients;i++)
+	for(int i=1; i<PREVIOUS_SAMPLES_BUFFER_SIZE;i++)
 	{	
-		sum += (cofficients[i]* getPreviousSample());
+		sampleFiltered += (_cofficients[i]* GetPreviousSample());
 	}
-	currIdxGetPreviousSamples = putPreviousSample(sample);
-	return sum;
+	_currGet = PutCurrentSample(sample);
+	return sampleFiltered;
 }
