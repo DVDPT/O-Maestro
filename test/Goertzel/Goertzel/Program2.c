@@ -1,7 +1,7 @@
 #include "goertzel.h"
 #include "GoertzelStructs.h"
-
-#define __N  (4400)
+#include "classtest.h"
+#define __N  (2200)
 #define __A  (1000)	
 
 
@@ -18,12 +18,12 @@ static void generate_sinusoids( U16 * sinusoid)
 	int i = 0;
 	for(;i < __N ; ++i)
 	{
-		sinusoid[i] = (U16)(__A * sin((2*PI*_block1*i) / (float)__Fs)) +
+		sinusoid[i] = (U16)(__A * sin((2*PI*_block1*i) / (float)__Fs))/* +
 			(U16)(__A * sin((2*PI*_block2*i) / (float)__Fs)) +
 			(U16)(__A * sin((2*PI*_block3*i) / (float)__Fs)) +
 			(U16)(__A * sin((2*PI*_block4*i) / (float)__Fs)) +
 			(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) +
-			(U16)(__A * sin((2*PI*_block6*i) / (float)__Fs)) 
+			(U16)(__A * sin((2*PI*_block6*i) / (float)__Fs)) */
 					 ;
 					
 	}

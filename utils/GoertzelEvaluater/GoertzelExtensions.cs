@@ -59,24 +59,34 @@ namespace GoertzelEvaluater
         {
             var smallerFrequency = block.Frequencies.First().Frequency ;
             var biggestFrequency = block.Frequencies.Last().Frequency ;
-            var filterMiddlePoint = (smallerFrequency + biggestFrequency) / 2;
-            var neededBandwidth = (biggestFrequency - smallerFrequency);
-            var originBandwidth = neededBandwidth*2;
 
-            var w0 = 2*Math.PI*originBandwidth/Program.FS;
-            Console.WriteLine("Filter values for band pass filter between {0} and {1} with fc: {2}",smallerFrequency,biggestFrequency,filterMiddlePoint);
-            Func<int, double> hx = idx => (w0/Math.PI)*sinc(w0*idx/Math.PI) * 2*Math.Cos(2 * Math.PI * (filterMiddlePoint / Program.FS) * idx );
+            var smallerFrequencyW0 = GetW0(smallerFrequency, Program.FS);
 
-                
-            for(int i = -(Program.FILTER_POINTS / 2) +1; i < Program.FILTER_POINTS/2; ++i)
-            {
-                var hi = hx(i);
-                Console.WriteLine("h({0}) = {1}",i,hi);
-                block.FilterValues.Add(hi);
-            }
+            var biggestFrequencyW0 = GetW0(biggestFrequency, Program.FS);
+
+            
+            Console.WriteLine("\nFilter values for band pass filter between {0} and {1} with fc:",smallerFrequency,biggestFrequency);
+            Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
+            GetFilterValues(smallerFrequencyW0, block.LowFilterValues);
+            Console.WriteLine("\nFilter values for {0} ", biggestFrequency); 
+            GetFilterValues(biggestFrequencyW0, block.HighFilterValues);
 
 
 
+
+
+
+
+        }
+
+        private static double GetW0(double freq, int fs)
+        {
+            return (2 * Math.PI * freq) / fs;
+        }
+
+        private static double LowPassFilter(double w0, int idx)
+        {
+            return (w0/Math.PI)*sinc(w0*idx/Math.PI);
         }
 
         private static double sinc(double value)
@@ -86,6 +96,16 @@ namespace GoertzelEvaluater
             if (value == 1 || value == 2)
                 return 0;
             return Math.Sin(value)/value;
+        }
+        
+        private static void GetFilterValues(double w0, List<double> filter)
+        {
+            for (int i = -(Program.FILTER_POINTS / 2) + 1; i < Program.FILTER_POINTS / 2; ++i)
+            {
+                var hi = LowPassFilter(w0, i);
+                Console.WriteLine("h({0}) = {1}", i, hi);
+                filter.Add(hi);
+            }
         }
     }
 }

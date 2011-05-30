@@ -14,4 +14,6 @@ float pot_freq(U16 * x, int n, int k);
 
 double pot_freq_double_samples(double * x, int n, int fs,int fo);
 
+
+
 #endif //__GOERTZEL
