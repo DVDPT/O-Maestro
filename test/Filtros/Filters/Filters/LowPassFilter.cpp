@@ -4,41 +4,51 @@
 
 
 
-LowPassFilter::LowPassFilter(int frequency,int Fs):cutOffFrequency(frequency),samplingFrequency(Fs)
+LowPassFilter::LowPassFilter(double * cofficientsToFilter)
 {
-	calculateSinc();
-}
-
-void LowPassFilter::calculateSinc()
-{
-	double w0 = (2*PI*cutOffFrequency)/samplingFrequency;
-	int currIdxCofficients =0;
 	for(int i=0; i<NumberOfCofficients; i++)
 	{
-		if((w0*i)==0)
-		{
-			cofficients[currIdxCofficients++]=i;
-		}
-		else if((w0 * sinc(w0*i))>0)
-		{
-			cofficients[currIdxCofficients++]=i;
-			cofficients[currIdxCofficients++]=i*(-1);
-
-		}
+		cofficients[i] = cofficientsToFilter[i];
+		previousSamples[i]=0;
 	}
+	currIdxGetPreviousSamples=0;
+	currIdxPutPreviousSamples=0;
+	
 }
 
-short  LowPassFilter:: run(short sample)
+
+
+short LowPassFilter::getPreviousSample()
 {
-	int samples[10];
-	int currIdxSamples = 0;
+
+	short value = previousSamples[currIdxGetPreviousSamples++];
+	if(currIdxGetPreviousSamples == NumberOfCofficients)
+	{
+		currIdxGetPreviousSamples = 0;
+	}
+	return value;
+
+}
+void  LowPassFilter::putPreviousSample(short sample)
+{
+	previousSamples[currIdxPutPreviousSamples++]= sample;
+	if(currIdxPutPreviousSamples == NumberOfCofficients)
+	{
+		currIdxPutPreviousSamples = 0;
+	}
+	
+}
+
+
+short LowPassFilter:: Filtrate(short sample)
+{
 	
 	short sampleFilter=sample * cofficients[0];
-	previousSamples[currIdxPresiousSamples++]=sample;
+	putPreviousSample(sample);
 
 	for(int i=1; i<NumberOfCofficients;i++)
 	{	
-		sampleFilter += (previousSamples[i] * cofficients[i]);
+		sampleFilter += (cofficients[i]* getPreviousSample());
 	}
 	
 	return sampleFilter;

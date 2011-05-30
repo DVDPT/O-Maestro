@@ -57,9 +57,9 @@ namespace GoertzelEvaluater
 
         private static void FillBlockFilter(GoertzelFrequenciesBlock block)
         {
-            var smallerFrequency = block.Frequencies.First().Frequency ;
-            var biggestFrequency = block.Frequencies.Last().Frequency ;
-            var filterMiddlePoint = (smallerFrequency + biggestFrequency) / 2;
+            int smallerFrequency = (int)block.Frequencies.First().Frequency ;
+            int biggestFrequency = (int)block.Frequencies.Last().Frequency ;
+            //var filterMiddlePoint = (smallerFrequency + biggestFrequency) / 2;
             var neededBandwidth = (biggestFrequency - smallerFrequency);
             var originBandwidth = neededBandwidth*2;
 
