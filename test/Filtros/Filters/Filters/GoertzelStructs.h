@@ -13,6 +13,7 @@ typedef struct _GoertzelFrequeciesBlock
 	int blockN;	///< The size of the block needed to process the "frequencies".
 	int blockFsDivFs; ///< Fs / blockFs
 	int blockNrOfFrequencies;	///< The number of frequencies present in "frequencies".
+	double * filterValues;	///< This block filter values
 	GoertzelFrequency* frequencies;
 }GoertzelFrequeciesBlock;
 

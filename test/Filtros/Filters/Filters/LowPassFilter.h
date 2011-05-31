@@ -7,8 +7,8 @@ class LowPassFilter
 
 	double * const _cofficients;
 	short _previousSamples[PREVIOUS_SAMPLES_BUFFER_SIZE];
-	unsigned int _currPut;
-	unsigned int _currGet;
+	int _currPut;
+	int _currGet;
 
 	short GetPreviousSample();
 	unsigned int PutCurrentSample(short sample);
@@ -17,6 +17,7 @@ public:
 	LowPassFilter(double * cofficientsToFilter);
 	LowPassFilter();
 	short Filter(short sample);
+	void Reset();
 };
 
 

@@ -20,21 +20,22 @@ namespace GoertzelEvaluater
             GoertzelFrequenciesBlock[] freqs = ge.Evaluate(notes);
 
 
-            /*/
+            //
             foreach (GoertzelFrequenciesBlock goertzelFrequency in freqs)
             {
                 Console.WriteLine(goertzelFrequency);
             }
             //*/
-            /*/
+            //
+            var strwritter = new StreamWriter("C:\\file.c");
             freqs.GenerateFiltersValues();
-            freqs.PrintStructDefinitions(Console.Out);
+            freqs.PrintStructDefinitions(strwritter);
+            strwritter.Close();
             //*/
             //freqs.GenerateFiltersValues();
 
             //PrintFilterCoefs(freqs, Console.Out);
 
-            Console.WriteLine(10%10);
         }
 
         private static void PrintFilterCoefs(GoertzelFrequenciesBlock[] freqs, TextWriter writer)

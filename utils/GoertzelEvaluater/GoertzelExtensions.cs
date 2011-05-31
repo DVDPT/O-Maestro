@@ -11,9 +11,10 @@ namespace GoertzelEvaluater
         public static void PrintStructDefinitions(this IEnumerable<GoertzelFrequenciesBlock> freqs, TextWriter writer)
         {
             int block = 0;
+            writer.WriteLine("#include \"GoertzelStructs.h\"\n");
             foreach (var freq in freqs)
             {
-
+                
                 writer.WriteLine("GoertzelFrequency const block{0}Freqs[] = \n{{", block);
                 foreach (var goertzelFrequency in freq.Frequencies)
                 {
@@ -24,7 +25,14 @@ namespace GoertzelEvaluater
                 }
                 writer.WriteLine("};");
 
-                writer.WriteLine("GoertzelFrequeciesBlock const block{0} = {{ {1}, {2}, {3}, {4},block{0}Freqs }};",
+                writer.WriteLine("double const block{0}filterValues[] = \n{{",block);
+                foreach (var filterValue in freq.FilterValues)
+                {
+                    writer.WriteLine("\t{0},",filterValue.ToString().Replace(",","."));    
+                }
+                writer.WriteLine("};");
+
+                writer.WriteLine("GoertzelFrequeciesBlock const block{0} = {{ {1}, {2}, {3}, {4},block{0}filterValues,block{0}Freqs }};",
                                     block,
                                     freq.Fs,
                                     freq.N,
@@ -33,6 +41,7 @@ namespace GoertzelEvaluater
                                 );
 
                 block++;
+                writer.Flush();
             }
 
             writer.WriteLine("GoertzelFrequeciesBlock const blocks[] = {");
@@ -59,14 +68,19 @@ namespace GoertzelEvaluater
         {
             var smallerFrequency = block.Frequencies.First().Frequency ;
             var biggestFrequency = block.Frequencies.Last().Frequency ;
-
+            var bandwidth = biggestFrequency - smallerFrequency;
+            /*/
+            var percentage = bandwidth*0.1;
+            smallerFrequency -= percentage/2;
+            biggestFrequency += percentage/2;
+            //*/
             var smallerFrequencyW0 = GetW0(smallerFrequency, Program.FS);
 
             var biggestFrequencyW0 = GetW0(biggestFrequency, Program.FS);
 
             
-            Console.WriteLine("\nFilter values for band pass filter between {0} and {1} with fc:",smallerFrequency,biggestFrequency);
-            Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
+            //Console.WriteLine("\nFilter values for band pass filter between {0} and {1} with fc:",smallerFrequency,biggestFrequency);
+            //Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
             GetFilterValues(smallerFrequencyW0, biggestFrequencyW0, block.FilterValues);
 
 
@@ -96,6 +110,11 @@ namespace GoertzelEvaluater
             return Math.Sin(Math.PI * value)/(Math.PI * value);
         }
         
+        private static double Hanning(int idx, int nrOfPoints)
+        {
+            return 0.5 * (1 + Math.Cos((2 * Math.PI * idx) / (nrOfPoints-1)));
+        }
+
         private static double Hamming(int idx, int nrOfPoints)
         {
             return 0.54 + 0.46*Math.Cos((2*Math.PI*idx)/(nrOfPoints));
@@ -104,10 +123,12 @@ namespace GoertzelEvaluater
         {
             for (int i = -(Program.FILTER_POINTS / 2) + 1; i < Program.FILTER_POINTS / 2; ++i)
             {
-                var hi = (LowPassFilter(w1,i) - LowPassFilter(w0, i) )* Hamming(i,Program.NR_OF_POINTS) ;
+                var hi = (LowPassFilter(w1, i) - LowPassFilter(w0, i)) * Hanning(i, Program.NR_OF_POINTS);
                 Console.WriteLine("h({0}) = {1}", i, hi);
                 filter.Add(hi);
             }
         }
+
+
     }
 }

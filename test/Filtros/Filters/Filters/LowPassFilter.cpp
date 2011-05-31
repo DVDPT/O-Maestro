@@ -37,7 +37,8 @@ unsigned int LowPassFilter::PutCurrentSample(short sample)
 
 	_previousSamples[_currPut++]= sample;
 
-	_currPut %= PREVIOUS_SAMPLES_BUFFER_SIZE;
+	if(_currPut == PREVIOUS_SAMPLES_BUFFER_SIZE)
+		_currPut = 0;
 
 	return oldPut;
 	
@@ -54,4 +55,10 @@ short LowPassFilter:: Filter(short sample)
 	}
 	_currGet = PutCurrentSample(sample);
 	return sampleFiltered;
+}
+
+void LowPassFilter::Reset(){
+	_currGet = _currPut = 0;
+	for(int i = 0; i < PREVIOUS_SAMPLES_BUFFER_SIZE; ++i)
+		_previousSamples[i] = 0;
 }
