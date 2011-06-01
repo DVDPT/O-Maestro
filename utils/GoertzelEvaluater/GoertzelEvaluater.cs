@@ -34,7 +34,7 @@ namespace GoertzelEvaluater
         
         private List<GoertzelFrequency> _freqs = new List<GoertzelFrequency>();
 
-        public List<double> FilterValues { get { return _filterValues; } }
+        public List<double> FilterValues { get { return _filterValues; } set { _filterValues = value; } }
         public GoertzelFrequency[] Frequencies { get { return _freqs.ToArray(); } }
 
         public override string ToString()

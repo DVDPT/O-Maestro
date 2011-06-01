@@ -13,8 +13,8 @@
 const int __Fs = 8800; //hz
 
 
-const double _block1	= 27.5;
-const double _block2	= 116.541;
+const double _block1	= 55;
+const double _block2	= 110;
 const double _block3	= 261.626;
 const double _block4	= 440;
 const double _block5	= 1046.5;
@@ -28,11 +28,11 @@ static void generate_sinusoids( U16 * sinusoid)
 	for(;i < __N ; ++i)
 	{
 		sinusoid[i] = (U16)(__A * sin((2*PI*_block4*i) / (float)__Fs))
-			/*+(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) 
-			+(U16)(__A * sin((2*PI*_block2*i) / (float)__Fs)) 
-			/*(U16)(__A * sin((2*PI*_block1*i) / (float)__Fs)) 
-			/*(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) +
-			(U16)(__A * sin((2*PI*_block6*i) / (float)__Fs)) */
+			/*+(U16)(__A * sin((2*PI*_block2*i) / (float)__Fs)) 
+			+(U16)(__A * sin((2*PI*_block3*i) / (float)__Fs)) 
+			+(U16)(__A * sin((2*PI*_block4*i) / (float)__Fs)) 
+			+(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) 
+			+(U16)(__A * sin((2*PI*_block6*i) / (float)__Fs)) */
 					 ;
 					
 	}
@@ -73,14 +73,25 @@ static void CalculateGoertzel(short * samples, int samplesSize,double coef, int 
 	
 	double Q0,Q1,Q2;
 	double  relativePower;
-	double sum = 0;
+	double sumReal = 0,sum = 0;
 	int i,j=0;
 	float percentage=0;
 	Q0 = Q1 = Q2 = 0;
-
-	for(i = 0; i<__N; i++)
+	for(i = 0, j=0; i<__N; i++)
+	{
+		sumReal+=samples[i]*samples[i];
 		filteredSamples[i] = filter.Filter(samples[i]);
+		sum+= filteredSamples[i]*filteredSamples[i];
+	}
 
+	double percentageE = sum * 100 / sumReal;
+	
+	
+	
+	if(percentageE < 10)
+		return;
+
+	sum = 0;
 	for(i = 0; j < blockn && i < samplesSize; j++,i+=jump)
 	{
 		
@@ -89,6 +100,8 @@ static void CalculateGoertzel(short * samples, int samplesSize,double coef, int 
 		Q1 = Q0;
 		sum += filteredSamples[i]*filteredSamples[i];
 	}
+
+
 
 	relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , j);
 	percentage = ((relativePower)* 100 )/sum;

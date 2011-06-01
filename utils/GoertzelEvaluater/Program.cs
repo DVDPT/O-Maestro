@@ -31,6 +31,7 @@ namespace GoertzelEvaluater
             freqs.GenerateFiltersValues();
             freqs.PrintStructDefinitions(strwritter);
             strwritter.Close();
+            freqs.AssertEqualCoefficients();
             //*/
             //freqs.GenerateFiltersValues();
 
