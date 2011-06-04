@@ -1,13 +1,13 @@
 #pragma once
 #include <Windows.h>
-class ManualResetEvent
+class Event
 {
 	HANDLE _event;
 public:
 
-	ManualResetEvent(BOOL initialState)
+	Event(BOOL initialState, BOOL manualReset)
 	{
-		_event = CreateEvent(NULL,TRUE,initialState,NULL);
+		_event = CreateEvent(NULL,manualReset,initialState,NULL);
 	}
 
 	void Wait()

@@ -10,8 +10,9 @@ public:
 		return InterlockedExchangeAdd(ref,value);
 	} 
 
-	static int Increment(int * ref)
+	static int Increment(volatile int * ref)
 	{
-		return Add((unsigned *)ref,1);
+		Add((unsigned *)ref,1);
+		return *ref;
 	}
 };

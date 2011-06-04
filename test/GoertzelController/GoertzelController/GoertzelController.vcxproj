@@ -75,15 +75,19 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GoertzelConfiguration.cpp" />
+    <ClCompile Include="GoertzelControllerTest.cpp" />
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="Program.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BlockBlockingQueue.h" />
+    <ClInclude Include="Assert.h" />
+    <ClInclude Include="GoertzelBlockBlockingQueue.h" />
     <ClInclude Include="Goertzel.h" />
     <ClInclude Include="GoertzelController.h" />
     <ClInclude Include="Interlocked.h" />
-    <ClInclude Include="ManualResetEvent.h" />
+    <ClInclude Include="LowPassFilter.h" />
+    <ClInclude Include="Event.h" />
     <ClInclude Include="Monitor.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Utils.h" />

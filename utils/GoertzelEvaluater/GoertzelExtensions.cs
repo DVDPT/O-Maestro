@@ -12,6 +12,15 @@ namespace GoertzelEvaluater
         {
             int block = 0;
             writer.WriteLine("#include \"GoertzelStructs.h\"\n");
+            
+            writer.WriteLine("#define GOERTZEL_NR_OF_FREQUENCIES ({0})",freqs.Sum(bl=>bl.Frequencies.Length));
+            writer.WriteLine("#define GOERTZEL_NR_OF_BLOCKS ({0})",freqs.Count());
+            writer.WriteLine("#define GOERTZEL_FREQUENCY_MAX_N ({0})",freqs.Max(bl=>bl.N));
+            writer.WriteLine("#define GOERTZEL_CONTROLLER_BUFFER_SIZE ({0})", 8000);
+            writer.WriteLine("#define GOERTZEL_CONTROLLER_FS ({0})", Program.FS);
+            writer.WriteLine("#define GOERTZEL_CONTROLLER_SAMPLES_TYPE {0}", "short");
+
+            writer.WriteLine();
             foreach (var freq in freqs)
             {
                 
@@ -32,7 +41,7 @@ namespace GoertzelEvaluater
                 }
                 writer.WriteLine("};");
 
-                writer.WriteLine("GoertzelFrequeciesBlock const block{0} = {{ {1}, {2}, {3}, {4},block{0}filterValues,block{0}Freqs }};",
+                writer.WriteLine("GoertzelFrequeciesBlock const block{0} = {{ {1}, {2}, {3}, {4},(double*)block{0}filterValues,(GoertzelFrequency*)block{0}Freqs }};",
                                     block,
                                     freq.Fs,
                                     freq.N,
@@ -48,10 +57,10 @@ namespace GoertzelEvaluater
 
             for (int i = 0; i < block; ++i)
             {
-                writer.WriteLine("\t &block{0} ,", i);
+                writer.WriteLine("\t block{0} ,", i);
             }
             writer.WriteLine("};");
-            writer.WriteLine("GoertzelFrequeciesBlock** goertzelBlocks = blocks;");
+            writer.WriteLine("GoertzelFrequeciesBlock** goertzelBlocks = (GoertzelFrequeciesBlock**)blocks;");
         }
 
 

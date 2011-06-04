@@ -13,11 +13,11 @@
 const int __Fs = 8800; //hz
 
 
-const double _block1	= 55;
-const double _block2	= 110;
-const double _block3	= 261.626;
+const double _block1	= 4186.01;
+const double _block2	= 932.328;
+const double _block3	= 65.4064;
 const double _block4	= 440;
-const double _block5	= 1046.5;
+const double _block5	= 880;
 const double _block6	= 3135.96;
 
 short max(short * arr, int size){ int max = arr[0]; for(int i = 1; i< size; i++)if(max< arr[i])max = arr[i];return max; }
@@ -27,10 +27,10 @@ static void generate_sinusoids( U16 * sinusoid)
 	int i = 0;
 	for(;i < __N ; ++i)
 	{
-		sinusoid[i] = (U16)(__A * sin((2*PI*_block4*i) / (float)__Fs))
-			/*+(U16)(__A * sin((2*PI*_block2*i) / (float)__Fs)) 
-			+(U16)(__A * sin((2*PI*_block3*i) / (float)__Fs)) 
-			+(U16)(__A * sin((2*PI*_block4*i) / (float)__Fs)) 
+		sinusoid[i] = (U16)(__A * sin((2*PI*_block1*i) / (float)__Fs))
+			/*+(U16)(__A * sin((2*PI*_block3*i) / (float)__Fs)) 
+			+(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) 
+			/*+(U16)(__A * sin((2*PI*_block4*i) / (float)__Fs)) 
 			+(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) 
 			+(U16)(__A * sin((2*PI*_block6*i) / (float)__Fs)) */
 					 ;
@@ -86,7 +86,8 @@ static void CalculateGoertzel(short * samples, int samplesSize,double coef, int 
 
 	double percentageE = sum * 100 / sumReal;
 	
-	
+	if(freq == 880)
+		freq++;
 	
 	if(percentageE < 10)
 		return;
