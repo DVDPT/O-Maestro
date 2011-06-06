@@ -106,7 +106,7 @@ namespace GoertzelEvaluater
                 
             }
             var maxValue = GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS);
-            Console.WriteLine("____>"+ maxValue);
+            
             List<double> d = new List<double>();
 
             foreach (var filterValue in block.FilterValues)

@@ -86,7 +86,7 @@ static void CalculateGoertzel(short * samples, int samplesSize,double coef, int 
 
 	double percentageE = sum * 100 / sumReal;
 	
-	if(freq == 880)
+	if(freq == 27)
 		freq++;
 	
 	if(percentageE < 10)
