@@ -5,7 +5,6 @@ Monitor::Monitor()
 	InitializeConditionVariable(&_condVar);
 	InitializeCriticalSection(&_lock);
 }
-int x = 0;
 void Monitor::Enter(Monitor& m)
 {
 	EnterCriticalSection(&m._lock);

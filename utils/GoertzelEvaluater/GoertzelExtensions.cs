@@ -11,7 +11,7 @@ namespace GoertzelEvaluater
         public static void PrintStructDefinitions(this IEnumerable<GoertzelFrequenciesBlock> freqs, TextWriter writer)
         {
             int block = 0;
-            writer.WriteLine("#include \"GoertzelStructs.h\"\n");
+            writer.WriteLine("#include \"Goertzel.h\"\n");
             
             writer.WriteLine("#define GOERTZEL_NR_OF_FREQUENCIES ({0})",freqs.Sum(bl=>bl.Frequencies.Length));
             writer.WriteLine("#define GOERTZEL_NR_OF_BLOCKS ({0})",freqs.Count());
@@ -60,7 +60,7 @@ namespace GoertzelEvaluater
                 writer.WriteLine("\t block{0} ,", i);
             }
             writer.WriteLine("};");
-            writer.WriteLine("GoertzelFrequeciesBlock** goertzelBlocks = (GoertzelFrequeciesBlock**)blocks;");
+            writer.WriteLine("GoertzelFrequeciesBlock* goertzelBlocks = (GoertzelFrequeciesBlock*)blocks;");
         }
 
 
@@ -75,19 +75,28 @@ namespace GoertzelEvaluater
 
         private static void FillBlockFilter(GoertzelFrequenciesBlock block)
         {
-            var smallerFrequency = block.Frequencies.First().Frequency ;
-            var biggestFrequency = block.Frequencies.Last().Frequency ;
-            var bandwidth = biggestFrequency - smallerFrequency;
+            var realSmallerFrequency = block.Frequencies.First().Frequency ;
+            var realBiggestFrequency = block.Frequencies.Last().Frequency ;
+            
             /*/
             var percentage = bandwidth*0.1;
             smallerFrequency -= percentage/2;
             biggestFrequency += percentage/2;
             //*/
-            var smallerFrequencyW0 = GetW0(smallerFrequency, Program.FS);
 
-            var biggestFrequencyW0 = GetW0(biggestFrequency, Program.FS);
+            var realBandwidth = realBiggestFrequency - realSmallerFrequency;
 
-            
+            var bandwidthGain = realBandwidth*10/100;
+
+            var smallerFrequency = realSmallerFrequency - bandwidthGain;
+            var biggestFrequency = realBiggestFrequency + bandwidthGain;
+
+            var smallerFrequencyW0 = GetW0(smallerFrequency, Program.FS) ;
+
+            var biggestFrequencyW0 = GetW0(biggestFrequency, Program.FS) ;
+
+            var bandwidth = biggestFrequency - smallerFrequency;
+
             //Console.WriteLine("\nFilter values for band pass filter between {0} and {1} with fc:",smallerFrequency,biggestFrequency);
             //Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
             GetFilterValues(smallerFrequencyW0, biggestFrequencyW0, block.FilterValues);

@@ -12,7 +12,8 @@ enum TypeOfManipulation{READ, WRITE};
 ///	This queue purpose is to provide digital signal samples (by blocks) with a simple interface for Goertzel Filters.
 ///	This queue is responsible for calculating the overall signal power (by block).
 /// This queue is thread safe and is prepared to serve multiple Goertzel Filters, with the same blocks.
-///	NOTE:	The size of the buffer passed in the ctor should be multiple of sizeof(double) and the sizeof(Block) should be an even number
+///	NOTE:	The size of the buffer passed in the ctor should be multiple of sizeof(double) + blocksize
+///			this is needed so that the queue stores the power of the input signal.
 ///
 template <class T>
 class GoertzelBlockBlockingQueue
@@ -200,7 +201,6 @@ public:
 				break;
 
 			Monitor::Wait(_monitor);
-
 		}while(true);
 		
 		
@@ -226,6 +226,7 @@ public:
 		_currNrOfGets -= nrOfReads;
 		
 		CheckIfItWasTheLastRead();
+
 
 		Monitor::Exit(_monitor);
 	}
@@ -288,13 +289,19 @@ public:
 	void DecrementNumberOfGetsToFreeBlock()
 	{
 		Monitor::Enter(_monitor);
-		printf("curr-> %d max -> %d",_currNrOfGets,_maxNrOfGets-1);
+
 		if(--_maxNrOfGets == 0)
 		{
 			_currNrOfGets = 0;
 			Monitor::Exit(_monitor);
 			return;
 		}
+
+		///
+		///	if the readers where signal before a reader can announce that he dont what to read more from this samples
+		///
+		if(_maxNrOfGets < _currNrOfGets)
+			_currNrOfGets = _maxNrOfGets;
 
 		///
 		///	After this change the queue may be in conditions to carry on 

@@ -17,7 +17,7 @@ typedef void (*GoertzelControllerCallback)(GoertzelResult * results,int nrOfResu
 ///		This value is important so that a call to Goertzel only occurs when
 ///		some of the block frequencies are present in the input signal
 ///
-#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (15)
+#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (8)
 
 template <	
 	class SamplesBufferType,
@@ -116,37 +116,7 @@ class GoertzelController
 		///
 		int BlockIndex;						
 	};
-	
-	///
-	///
-	///	
-	/*
-	///																													///
-	///	------------------------------------------------	Methods	----------------------------------------------------///
-	///																													///
-	///
-	///	Atomically checks if exists more blocks to process in this sample and returns the idx of a block or -1 if all were processed already
-	///
-	GoertzelFrequeciesBlock * GetFrequencyNextBlock(int * freqs)
-	{
-		int idx = 0;
-		if(_processedBlocks >= NrOfFrequencies || (idx = Interlocked::Increment(&_processedBlocks)) >= NrOfFrequencies)
-		{
-			///
-			///	Reset filters event no more samples to process
-			///
-			_filtersEvent.Reset();
-			///
-			///	Wake Controller
-			///
-			_controllerEvent.Set();
 
-			return NULL;
-		}
-		
-		return  &_frequenciesBlock[idx];
-	}
-	*/
 
 	///
 	///	Returns a pointer where the results of Goertzel should be written
@@ -201,13 +171,16 @@ class GoertzelController
 		SamplesBufferType sample, filteredSample;
 
 		///	Stores the power of the filtered samples
-		double filteredSamplesPower;
+		double filteredSamplesPower = 0;
 
 		///	Stores the power of the samples saved in filteredSamples, so that Goertzel Function doesn't need to calculate this value all the time
 		double goertzelSamplesPower = 0;
 
 		///	The index for the filteredSamples
 		int filteredSamplesIdx = 0;
+
+		///	An overall counter to know when to save a filtered sample
+		int overallIndex = 0;
 
 		///	A flag to test if the filter has halted the samples processing
 		BOOL haltFilter = FALSE;
@@ -219,15 +192,17 @@ class GoertzelController
 			///
 			///	Wait until there are samples to process
 			///
+			
 			queue.AdquireReaderBlock(reader);
-
+			
 			///
 			///	Loop all the new samples to:
 			///		-	Filtrate of the samples to this block frequencies.
 			///		-	Calculate of the filtered samples power to further comparison
 			///		-	Store the needed filtered samples in the local array for further use
+			///		-	Calculate the power of the needed samples to pass as argument to goertzel
 			///
-			for(int i = 0; reader.TryRead(&sample); ++i)
+			for(; reader.TryRead(&sample); ++overallIndex)
 			{
 				///
 				///	Filter the sample
@@ -242,7 +217,7 @@ class GoertzelController
 				///
 				///	If we gonna need this sample store it on the local array and accumulate its power
 				///
-				if(i % block.blockFsDivFs == 0 && filteredSamplesIdx < block.blockN)
+				if(overallIndex % block.blockFsDivFs == 0 && filteredSamplesIdx < block.blockN)
 				{
 					filteredSamples[filteredSamplesIdx++] = filteredSample;
 
@@ -259,10 +234,11 @@ class GoertzelController
 				///
 				///	We have all samples needed to process this block
 				///
-				printf("AKI\n");
+			
+			
 				if(filteredSamplesIdx == block.blockN)
 				{
-					
+					printf("\nBlock %d entering goertzel\n",BlockIndex);
 					filteredSamplesIdx = 0;
 					for(int i = 0; i < block.blockNrOfFrequencies; ++i)
 						Goertzel<SamplesBufferType>::CalculateGoertzel(
@@ -277,7 +253,7 @@ class GoertzelController
 				}
 				else
 				{
-					printf("More\n");
+					
 					///
 					///	We need more samples to be able to process this block, wait for more
 					///	Nothing to do here
@@ -287,18 +263,19 @@ class GoertzelController
 			}
 			else
 			{
+				printf("\nBlock %d halting \t| \tPower:%f \t| Filtered Power:%f \t| PowerPercentage:%f\n",BlockIndex,reader.GetBlockPower(),filteredSamplesPower,relationBetweenFilteredAndBlockPower);
 				haltFilter = TRUE;
 			}
 
 
 			queue.ReleaseReader(reader);
-			printf("After Release %d\n",haltFilter);
+			
 			if(haltFilter)
 			{
 				///
 				///	There are no frequencies for this block in this samples reset this filter and wait for all other filters to end
 				///
-				goertzelSamplesPower = filteredSamplesIdx = 0;
+				goertzelSamplesPower = overallIndex = filteredSamplesIdx = 0;
 				haltFilter = FALSE;
 
 				///
@@ -318,7 +295,7 @@ class GoertzelController
 				///	Wait for the other filters
 				///
 				gc._filtersEvent.Reset();
-				printf("Entrei\n");
+				
 				gc._filtersEvent.Wait();
 			}
 
@@ -328,15 +305,16 @@ class GoertzelController
 
 	static inline void ChangeGoertzelResultsBuffer(GoertzelController * gc, BOOL * state)
 	{
-
-		int sizeOfResults = ((sizeof(GoertzelResult) * NrOfFrequencies));
+		
 		if(*state)
 		{
-			gc->_results += sizeOfResults; 
+
+			gc->_results = &(gc->_results[NrOfFrequencies]); 
+			
 		}
 		else
 		{
-			gc->_results -= sizeOfResults;
+			gc->_results = gc->_resultsBuffer;
 		}
 
 		*state = !*state;

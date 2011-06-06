@@ -4,9 +4,9 @@
 
 
 #define GOERTZEL_NR_OF_FREQUENCIES (88)
-#define GOERTZEL_NR_OF_BLOCKS (6)
-#define GOERTZEL_FREQUENCY_MAX_N (179)
-#define GOERTZEL_CONTROLLER_BUFFER_SIZE (8000)
+#define GOERTZEL_NR_OF_BLOCKS (5)
+#define GOERTZEL_FREQUENCY_MAX_N (180)
+#define GOERTZEL_CONTROLLER_BUFFER_SIZE (7998)
 #define GOERTZEL_CONTROLLER_FS (8800)
 #define GOERTZEL_CONTROLLER_SAMPLES_TYPE short
 
@@ -63,5 +63,8 @@ public:
 
 		double freqPower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,freq->coefficient) , samplesSize);
 		result->percentage = freqPower * 100 / totalPower;
+		
+		if(result->percentage > 10)
+		printf("TotalPower: %f \t ThisPower: %f \t freq: %d \t percentage:%d%%\n",totalPower,freqPower,freq->frequency,result->percentage);
 	}
 };
