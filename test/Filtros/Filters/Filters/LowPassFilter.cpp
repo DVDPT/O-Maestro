@@ -1,3 +1,4 @@
+#pragma once
 #include "LowPassFilter.h"
 #include <stdio.h>
 #include <stdlib.h>

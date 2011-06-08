@@ -60,6 +60,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="PlayerRecorder.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="BandPassFilter.cpp" />
     <ClCompile Include="goertzel.c" />
@@ -71,6 +72,7 @@
     <ClInclude Include="goertzel.h" />
     <ClInclude Include="GoertzelStructs.h" />
     <ClInclude Include="LowPassFilter.h" />
+    <ClInclude Include="PlayerRecorder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

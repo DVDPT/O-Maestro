@@ -1,6 +1,4 @@
-#ifndef __GOERTZEL
-#define __GOERTZEL
-
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -16,4 +14,3 @@ double pot_freq_double_samples(double * x, int n, int fs,int fo);
 
 
 
-#endif //__GOERTZEL

@@ -1,26 +1,38 @@
 
-#include "BandPassFilter.h"
+#include "PlayerRecorder.h"
+#include "LowPassFilter.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "goertzel.h"
-#include "BandPassFilter.h"
+#include <iostream>
+#include <fstream>
+//#include "BandPassFilter.h"
 #include "GoertzelStructs.h"
 
 #define __N  (4400)
 #define __A  (1000)	
 
+const int  SecondsOfCollection = 1;
 
 const int __Fs = 8800; //hz
-
+FILE* out ;
 
 const double _block1	= 55;
 const double _block2	= 110;
 const double _block3	= 261.626;
 const double _block4	= 440;
-const double _block5	= 1046.5;
+const double _block5	= 880;
 const double _block6	= 3135.96;
 
-short max(short * arr, int size){ int max = arr[0]; for(int i = 1; i< size; i++)if(max< arr[i])max = arr[i];return max; }
+short maxArr(short * arr, int size)
+{ 
+	int maxe = arr[0]; 
+	for(int i = 1; i< size; i++)
+		if(maxe< arr[i])
+			maxe = arr[i];
+	
+	return maxe; 
+}
 
 static void generate_sinusoids( U16 * sinusoid)
 {
@@ -28,7 +40,7 @@ static void generate_sinusoids( U16 * sinusoid)
 	for(;i < __N ; ++i)
 	{
 		sinusoid[i] = (U16)(__A * sin((2*PI*_block4*i) / (float)__Fs))
-			/*+(U16)(__A * sin((2*PI*_block2*i) / (float)__Fs)) 
+			+(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) /*
 			+(U16)(__A * sin((2*PI*_block3*i) / (float)__Fs)) 
 			+(U16)(__A * sin((2*PI*_block4*i) / (float)__Fs)) 
 			+(U16)(__A * sin((2*PI*_block5*i) / (float)__Fs)) 
@@ -105,10 +117,25 @@ static void CalculateGoertzel(short * samples, int samplesSize,double coef, int 
 
 	relativePower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,coef) , j);
 	percentage = ((relativePower)* 100 )/sum;
-	if(percentage > 10)
-		printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% || Coef: %f\n", sum, relativePower,freq,percentage,coef  );
+	if(percentage > 50)
+	{
+					out = fopen("Amostras.txt", "w+");
+					fprintf(out, "%c",'{') ;
+					for(int j=0; j<samplesSize; j++)
+					{
+						short k = samples[j];
+						fprintf(out, "%s",",") ;
+						fprintf(out, "%d", &k);
+				
+					}
+					fprintf(out,"%c","\n");
+				fclose(out);
+				printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% || Coef: %f\n", sum, relativePower,freq,percentage,coef  );
+	}
+	}
+		
 
-}
+
 
 
 
@@ -150,16 +177,25 @@ void RunGoertzelOnAllFreqs(GoertzelFrequeciesBlock** gblock, U16 * sinusoid )
 	}
 }
 
+void init(short * arr, int size)
+{
+	for(int i=0; i<size; i++)
+	{
+	
+		arr[i]=0;
+	}
+}
 int main()
 {
 
 	
-	U16    sinusoid[__N];
-	
 
-	int i=0,j=0;
-	generate_sinusoids(sinusoid);
-	printf("## Integer sinusoid samples ##:\n" );	
+	//int i=0,j=0;
+	//
+	//U16 sinusoid[__N];
+	//generate_sinusoids(sinusoid);
+	//RunGoertzelOnAllFreqs(goertzelBlocks, sinusoid);
+	//printf("## Integer sinusoid samples ##:\n" );	
 	/*/
 	for(; i<__N; ++i)
 		printf("n=%d -> %d \n", i, sinusoid[i] );
@@ -168,12 +204,37 @@ int main()
 	printf("\nTimePower:      %0.2f\nGoertzelPower:  %0.2f\n Freq: %d || Per: %0.1f%% \n", sinusoidPower, relativePower,__Fo,(relativePower * 100 )/sinusoidPower  );
 	//*/
 	//
+	//*/
+	short * aux;
+	while(true)
+	{
 
+		U16    sinusoid[SecondsOfCollection*__Fs];
+		init(sinusoid,SecondsOfCollection*__Fs);
+		
+		
 
+		if(PlayerRecorder::record(SecondsOfCollection,__Fs,sinusoid))
+		{
 
-
+			for(int h=0; h<SecondsOfCollection*__Fs; h+=__N)
+			{
+				short* s = &sinusoid[h];
+				RunGoertzelOnAllFreqs(goertzelBlocks, s);
+				
+			}
+			printf("\nFinalização do processamento de Sinal\n");
+			init(sinusoid,SecondsOfCollection*__Fs);
+		}
+		
+		
+	}
 	
-	RunGoertzelOnAllFreqs(goertzelBlocks, sinusoid);
+	
+	//*/
+	//*/
+	//RunGoertzelOnAllFreqs(goertzelBlocks, sinusoid);
+	
 
 	/*/
 
