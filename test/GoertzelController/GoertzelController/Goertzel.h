@@ -1,5 +1,15 @@
 #pragma once
 
+#include "LowPassFilter.h"
+
+
+#define GOERTZEL_NR_OF_FREQUENCIES (88)
+#define GOERTZEL_NR_OF_BLOCKS (6)
+#define GOERTZEL_FREQUENCY_MAX_N (180)
+#define GOERTZEL_QUEUE_MAX_BLOCKS (45)
+#define GOERTZEL_CONTROLLER_BUFFER_SIZE (((GOERTZEL_FREQUENCY_MAX_N + sizeof(double)) * GOERTZEL_QUEUE_MAX_BLOCKS))
+#define GOERTZEL_CONTROLLER_FS (8800)
+#define GOERTZEL_CONTROLLER_SAMPLES_TYPE short
 
 struct GoertzelFrequency
 {
@@ -15,6 +25,7 @@ struct GoertzelFrequeciesBlock
 	int blockN;	///< The size of the block needed to process the "frequencies".
 	int blockFsDivFs; ///< Fs / blockFs
 	int blockNrOfFrequencies;	///< The number of frequencies present in "frequencies".
+	double * filterValues;	///< This block filter values
 	GoertzelFrequency* frequencies;
 };
 
@@ -27,30 +38,34 @@ struct GoertzelResult
 template <class T>
 class Goertzel
 {
-	static inline double CalculateRelativePower(float Q1, float Q2, double coeff)
+	static double CalculateRelativePower(float Q1, float Q2, double coeff)
 	{
 		return (Q1*Q1) + (Q2*Q2) - Q1 * Q2 * coeff;		
 	}
 
-	static inline double CalculateFrequencyPower(double relativePower, int n)
+	static double CalculateFrequencyPower(double relativePower, int n)
 	{
 		return 2 * relativePower / n;  
 	}
 
 public:
 
-	static void CalculateGoertzel(T * samples, int samplesSize,GoertzelFrequeciesBlock * block, GoertzelFrequency * freq,GoertzelResult * result)
+	static void CalculateGoertzel(T * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const double totalPower)
 	{
-		double Q0,Q1,Q2;
+		double Q0,Q1,Q2,samplesPower = 0;
 		Q0 = Q1 = Q2 = 0;
-		for(int i = 0; i < samplesSize && i < block->blockN ; i+=block->blockFsDivFs)
+		for(int i = 0; i < samplesSize; i++)
 		{
 			Q0 = samples[i] + (freq->coefficient * Q1) - Q2 ;
 			Q2 = Q1;
 			Q1 = Q0;
+			
 		}
 
-		double result = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,freq->coefficient) , block->blockN);
-		result->percentage += (result / block->blockFsDivFs);
+		double freqPower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,freq->coefficient) , samplesSize);
+		result->percentage = freqPower * 100 / totalPower;
+		
+		if(result->percentage > 10)
+		;//printf("TotalPower: %f \t ThisPower: %f \t freq: %d \t percentage:%d%%\n",totalPower,freqPower,freq->frequency,result->percentage);
 	}
 };

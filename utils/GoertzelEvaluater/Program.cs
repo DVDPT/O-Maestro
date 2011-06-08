@@ -39,20 +39,7 @@ namespace GoertzelEvaluater
 
         }
 
-        private static void PrintFilterCoefs(GoertzelFrequenciesBlock[] freqs, TextWriter writer)
-        {
-            writer.WriteLine("{");
-
-            foreach (var filterValue in freqs[1].FilterValues)
-            {
-                writer.WriteLine(filterValue.ToString().Replace(',','.') + ",");
-            }
-
-            writer.WriteLine("}");
-
-
-        }
-
+     
 
         private static double[] notes = {
                                      27.5, //
