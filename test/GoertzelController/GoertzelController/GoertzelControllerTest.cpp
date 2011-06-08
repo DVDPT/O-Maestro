@@ -5,18 +5,18 @@ extern GoertzelFrequeciesBlock* goertzelBlocks;
 
 void ControllerCallback(GoertzelResult * results, int nrOfResults);
 
-#define NUMBER_OF_RUNS (5)
+#define NUMBER_OF_RUNS (8)
 #define PI (4*atan(1.0))  
 #define AMPLITUDE (1000)
 #define NR_OF_SAMPLES (GOERTZEL_CONTROLLER_BUFFER_SIZE * 5 * NUMBER_OF_RUNS)
 #define FREQUENCIES_MAX_VALUE (180)
-#define DELAY_ON_SAMPLES_BLOCK (50)
+#define DELAY_ON_SAMPLES_BLOCK (100)
 
 GoertzelController<GOERTZEL_CONTROLLER_SAMPLES_TYPE,
 	GOERTZEL_CONTROLLER_BUFFER_SIZE,
 	GOERTZEL_CONTROLLER_FS,
 	GOERTZEL_NR_OF_FREQUENCIES,
-	FREQUENCIES_MAX_VALUE,
+	GOERTZEL_FREQUENCY_MAX_N,
 	GOERTZEL_NR_OF_BLOCKS> goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerCallback);
 
 ///	Freqs de ponta
@@ -28,18 +28,22 @@ int x = 0;
 
 
 void GetFrequencyStringRepresentation(int freq,char* buf);
+BOOL IsFrequencyPresentInTheInputSignal(int freq);
 
 void ControllerCallback(GoertzelResult * results, int nrOfResults)
 {
 	char strbuf[1000];
 	printf("\n------------------------------------------  RESULTS  ------------------------------------------\n");
+
 	int res = 0;
 	for (int i = 0; i < nrOfResults; ++i)
 	{
-		if(results[i].percentage > 10)
+		if(results[i].percentage >= 10)
 		{
 			GetFrequencyStringRepresentation(results[i].frequency,strbuf);
-			printf("|\t %s \t Percentage: %d\n",strbuf,results[i].percentage);
+			printf("|\t %s \t Percentage: %d \t PresentInInputSignal:%s\n",strbuf,
+																		   results[i].percentage,
+																		   IsFrequencyPresentInTheInputSignal(results[i].frequency)?"TRUE":"FALSE");
 			res++;
 		}
 	}
@@ -68,16 +72,31 @@ void sendToGoertzel(short * sinusoid, int size)
 
 	if(idx == size)
 	{
-		printf("\n\n\n\nDEI A VOLTA ___________________");
+		printf("\n\n ---------------------- NO MORE SAMPLES!!!! ---------------------- \n\n");
 		idx = 0;
 		return;
 	}
-	if(goertzelController.CanWriteSample() == FALSE)
+	if(!goertzelController.CanWriteSample())
+	{
+		
 		goertzelController.WaitUntilWritingIsAvailable();
+
+	}
 	for(;idx<size && goertzelController.CanWriteSample() ;++idx)
-		goertzelController.WriteSample(&sinusoid[idx]);
+		goertzelController.WriteSample(&(sinusoid[idx]));
 	
 		printf(".");
+		
+}
+
+BOOL IsFrequencyPresentInTheInputSignal(int freq)
+{
+	for (int i = 0; i < sizeof(fos) / sizeof(double); ++i )
+	{
+		if( ((int)fos[i]) == freq )
+			return TRUE;
+	}
+	return FALSE;
 }
 
 void GetFrequencyStringRepresentation(int freq,char* buf)

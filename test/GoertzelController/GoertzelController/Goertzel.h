@@ -6,7 +6,8 @@
 #define GOERTZEL_NR_OF_FREQUENCIES (88)
 #define GOERTZEL_NR_OF_BLOCKS (6)
 #define GOERTZEL_FREQUENCY_MAX_N (180)
-#define GOERTZEL_CONTROLLER_BUFFER_SIZE (7998)
+#define GOERTZEL_QUEUE_MAX_BLOCKS (45)
+#define GOERTZEL_CONTROLLER_BUFFER_SIZE (((GOERTZEL_FREQUENCY_MAX_N + sizeof(double)) * GOERTZEL_QUEUE_MAX_BLOCKS))
 #define GOERTZEL_CONTROLLER_FS (8800)
 #define GOERTZEL_CONTROLLER_SAMPLES_TYPE short
 
@@ -37,12 +38,12 @@ struct GoertzelResult
 template <class T>
 class Goertzel
 {
-	static inline double CalculateRelativePower(float Q1, float Q2, double coeff)
+	static double CalculateRelativePower(float Q1, float Q2, double coeff)
 	{
 		return (Q1*Q1) + (Q2*Q2) - Q1 * Q2 * coeff;		
 	}
 
-	static inline double CalculateFrequencyPower(double relativePower, int n)
+	static double CalculateFrequencyPower(double relativePower, int n)
 	{
 		return 2 * relativePower / n;  
 	}
@@ -65,6 +66,6 @@ public:
 		result->percentage = freqPower * 100 / totalPower;
 		
 		if(result->percentage > 10)
-		printf("TotalPower: %f \t ThisPower: %f \t freq: %d \t percentage:%d%%\n",totalPower,freqPower,freq->frequency,result->percentage);
+		;//printf("TotalPower: %f \t ThisPower: %f \t freq: %d \t percentage:%d%%\n",totalPower,freqPower,freq->frequency,result->percentage);
 	}
 };

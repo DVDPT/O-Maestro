@@ -40,7 +40,9 @@ public:
 		///
 		///	Control variables to access the buffer
 		///
-		int _lastPos, _currPos, _currVersion, _startPos;
+		int _lastPos, _currPos, _startPos;
+
+		unsigned int _currVersion;
 
 		///
 		///	This instance tyoe if manipulation
@@ -75,7 +77,7 @@ public:
 		BlockManipulator(TypeOfManipulation tol, GoertzelBlockBlockingQueue& queue)
 			:	_tol(tol),
 				_queue(queue),
-				_currVersion(-1)
+				_currVersion(0)
 		{}
 
 		///
@@ -107,7 +109,7 @@ public:
 		///
 		BOOL TryWrite(T * value)
 		{
-			if(_tol != WRITE || _currPos == _lastPos)
+			if(!CanWrite())
 				return FALSE;
 
 			_queue._buf[GetAndAddCounter()] = *value;
@@ -125,9 +127,9 @@ private:
 	Monitor _monitor;
 
 
-	int _blockSize, _maxNrOfGets, _bufSize;
+	int _blockSize,  _bufSize;
 
-	volatile unsigned int _get, _put, _currNrOfGets, _nextPut, _currGetVersion;
+	volatile unsigned int _get, _put, _currNrOfGets, _nextPut, _currGetVersion,_maxNrOfGets;
 
 
 	T * _buf;
@@ -160,7 +162,7 @@ public:
 		_bufSize(bufferSize),
 		_maxNrOfGets(numberOfGetsToFree),
 		_currNrOfGets(numberOfGetsToFree),
-		_currGetVersion(0)
+		_currGetVersion(1)
 	{}
 
 	void AdquireWritterBlock(BlockManipulator& br)
@@ -187,6 +189,8 @@ public:
 		_nextPut = ((_put + _blockSize) % (_bufSize));
 		br.SetLastPosition(_nextPut);
 
+		//printf("Adquire Writter get:%d | last %d\n",br._currPos, br._lastPos);
+
 
 		Monitor::Exit(_monitor);
 	}
@@ -197,7 +201,7 @@ public:
 
 		do
 		{
-			if(!IsEmpty() && _currGetVersion != br._currVersion)
+			if(!IsEmpty() && _currGetVersion > br._currVersion)
 				break;
 
 			Monitor::Wait(_monitor);
@@ -215,19 +219,20 @@ public:
 		///
 		br.SetLastPosition((_get + _blockSize) % (_bufSize) );
 
+		
 		Monitor::Exit(_monitor);
 	}
 
 	void ReleaseReader(BlockManipulator& br, unsigned nrOfReads = 1)
 	{
 		Monitor::Enter(_monitor);
-		br._currVersion++;
+		br._currVersion = _currGetVersion;
 
 		_currNrOfGets -= nrOfReads;
 		
 		CheckIfItWasTheLastRead();
 
-
+		
 		Monitor::Exit(_monitor);
 	}
 
@@ -281,7 +286,6 @@ public:
 		///
 		_nextPut = -1;
 		Monitor::NotifyAll(_monitor);
-
 		Monitor::Exit(_monitor);
 	}
 

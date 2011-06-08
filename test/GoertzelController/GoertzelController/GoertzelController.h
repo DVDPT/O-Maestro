@@ -7,6 +7,7 @@
 #include "Thread.h"
 #include "Interlocked.h"
 #include "Event.h"
+#include "VersionEvent.h"
 
 
 
@@ -82,7 +83,7 @@ class GoertzelController
 	///
 	///	Goertzel Filters Event	
 	///
-	Event _filtersEvent;
+	VersionEvent _filtersEvent;
 
 	///
 	///	Controller Event
@@ -153,7 +154,7 @@ class GoertzelController
 		GoertzelFrequeciesBlock& block = *args->Block;
 
 		///	Block index
-		int BlockIndex = args->BlockIndex;
+		int blockIndex = args->BlockIndex;
 
 		/// The Queue where the samples will be
 		GoertzelBlockBlockingQueue<SamplesBufferType>& queue = gc._samplesQueue;
@@ -185,6 +186,9 @@ class GoertzelController
 		///	A flag to test if the filter has halted the samples processing
 		BOOL haltFilter = FALSE;
 
+		///	The event version, to pass as argument to the wait method of VersionEvent
+		unsigned int eventVersion = gc._filtersEvent.GetCurrentVersion();
+
 		while(TRUE)
 		{
 			filteredSamplesPower = 0;
@@ -192,7 +196,6 @@ class GoertzelController
 			///
 			///	Wait until there are samples to process
 			///
-			
 			queue.AdquireReaderBlock(reader);
 			
 			///
@@ -219,12 +222,13 @@ class GoertzelController
 				///
 				if(overallIndex % block.blockFsDivFs == 0 && filteredSamplesIdx < block.blockN)
 				{
+					
 					filteredSamples[filteredSamplesIdx++] = filteredSample;
 
 					goertzelSamplesPower += filteredSample * filteredSample;
 				}
 			}
-			filter.Reset();
+			
 
 			float relationBetweenFilteredAndBlockPower = filteredSamplesPower * 100 / reader.GetBlockPower();
 
@@ -238,14 +242,13 @@ class GoertzelController
 			
 				if(filteredSamplesIdx == block.blockN)
 				{
-					printf("\nBlock %d entering goertzel\n",BlockIndex);
-					filteredSamplesIdx = 0;
+					printf("\nBlock %d entering goertzel, TotalPower: %f\n",blockIndex,reader.GetBlockPower());
 					for(int i = 0; i < block.blockNrOfFrequencies; ++i)
 						Goertzel<SamplesBufferType>::CalculateGoertzel(
 																		filteredSamples,
 																		block.blockN,
 																		&block.frequencies[i],
-																		gc.GetFrequencyResult(BlockIndex,i),
+																		gc.GetFrequencyResult(blockIndex,i),
 																		goertzelSamplesPower
 																	  );
 
@@ -263,11 +266,9 @@ class GoertzelController
 			}
 			else
 			{
-				printf("\nBlock %d halting \t| \tPower:%f \t| Filtered Power:%f \t| PowerPercentage:%f\n",BlockIndex,reader.GetBlockPower(),filteredSamplesPower,relationBetweenFilteredAndBlockPower);
+				printf("\nBlock %d halting \t| \tPower:%f \t| Filtered Power:%f \t| PowerPercentage:%f\n",blockIndex,reader.GetBlockPower(),filteredSamplesPower,relationBetweenFilteredAndBlockPower);
 				haltFilter = TRUE;
 			}
-
-
 			queue.ReleaseReader(reader);
 			
 			if(haltFilter)
@@ -277,6 +278,7 @@ class GoertzelController
 				///
 				goertzelSamplesPower = overallIndex = filteredSamplesIdx = 0;
 				haltFilter = FALSE;
+				filter.Reset();
 
 				///
 				///	Show that this filter has no more interest on samples
@@ -294,9 +296,8 @@ class GoertzelController
 				///
 				///	Wait for the other filters
 				///
-				gc._filtersEvent.Reset();
+				gc._filtersEvent.Wait(&eventVersion);
 				
-				gc._filtersEvent.Wait();
 			}
 
 		}
@@ -371,10 +372,6 @@ class GoertzelController
 			gc->_goertzelFilters[i].Start((ThreadFunction)&GoertzelController::GoertzelFilterRoutine,(ThreadArgument)&arguments[i]);
 
 
-		///
-		/// Notify Filters to fetch blocks
-		///
-		gc->_filtersEvent.Set();
 
 		while(TRUE)
 		{
@@ -410,6 +407,7 @@ class GoertzelController
 			///	Run Callback
 			///
 			gc->_callback(currentResults,NrOfFrequencies);
+			
 		}
 	}
 
@@ -435,7 +433,7 @@ public:
 		_frequenciesBlock(freqs),
 		_processedBlocks(NrOfFrequencies),
 		_nrOfFrequenciesBlocks(numberOfBlocks),
-		_filtersEvent(false,true),
+		_filtersEvent(false),
 		_controllerEvent(false,false),
 		_results(_resultsBuffer),
 		_callback(callback),
@@ -465,7 +463,9 @@ public:
 
 	void WaitUntilWritingIsAvailable()
 	{
+
 		_samplesQueue.AdquireWritterBlock(_samplesWriter);
+
 	}
 
 	void WriteSample(SamplesBufferType * sample)

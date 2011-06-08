@@ -88,8 +88,8 @@ namespace GoertzelEvaluater
 
             var bandwidthGain = realBandwidth*10/100;
 
-            var smallerFrequency = realSmallerFrequency - bandwidthGain;
-            var biggestFrequency = realBiggestFrequency + bandwidthGain;
+            var smallerFrequency = realSmallerFrequency + bandwidthGain;
+            var biggestFrequency = realBiggestFrequency - bandwidthGain;
 
             var smallerFrequencyW0 = GetW0(smallerFrequency, Program.FS) ;
 

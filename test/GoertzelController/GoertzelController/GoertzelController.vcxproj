@@ -79,6 +79,7 @@
     <ClCompile Include="GoertzelControllerTest.cpp" />
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="Program.cpp" />
+    <ClCompile Include="VersionEvent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assert.h" />
@@ -91,6 +92,7 @@
     <ClInclude Include="Monitor.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="VersionEvent.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
