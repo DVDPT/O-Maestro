@@ -42,6 +42,7 @@ SECTIONS
 	.startup : {
 		__startup_start__ = ABSOLUTE(.);
 		*(.startup*);
+		
 		. = ALIGN(4);
 		__startup_end__ = ABSOLUTE(.);
 	} > ram
