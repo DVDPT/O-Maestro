@@ -196,6 +196,7 @@ class GoertzelController
 			///
 			///	Wait until there are samples to process
 			///
+			
 			queue.AdquireReaderBlock(reader);
 			
 			///
@@ -269,7 +270,7 @@ class GoertzelController
 				//printf("\nBlock %d halting \t| \tPower:%f \t| Filtered Power:%f \t| PowerPercentage:%f\n",blockIndex,reader.GetBlockPower(),filteredSamplesPower,relationBetweenFilteredAndBlockPower);
 				haltFilter = TRUE;
 			}
-			queue.ReleaseReader(reader);
+			queue.ReleaseReader(reader,haltFilter);
 			
 			if(haltFilter)
 			{
@@ -279,11 +280,6 @@ class GoertzelController
 				goertzelSamplesPower = overallIndex = filteredSamplesIdx = 0;
 				haltFilter = FALSE;
 				filter.Reset();
-
-				///
-				///	Show that this filter has no more interest on samples
-				///
-				queue.DecrementNumberOfGetsToFreeBlock();
 
 				///
 				///	If this is the last Filter going to sleep wake up Controller to hand over the results

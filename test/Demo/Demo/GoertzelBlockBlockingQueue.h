@@ -159,11 +159,13 @@ public:
 		_get(0),
 		_blockSize((blockSize + (sizeof(double) / sizeof(T)))),		///Reserve space to save the block power
 		_buf(buffer),
-		_bufSize(bufferSize),
+		_bufSize(bufferSize/sizeof(T)),
 		_maxNrOfGets(numberOfGetsToFree),
 		_currNrOfGets(numberOfGetsToFree),
 		_currGetVersion(1)
-	{}
+	{
+		
+	}
 
 	void AdquireWritterBlock(BlockManipulator& br)
 	{
@@ -173,7 +175,7 @@ public:
 		{
 			if(!IsFull() && _nextPut == -1)
 				break;
-
+			
 			Monitor::Wait(_monitor);
 
 		} while(true);
@@ -223,15 +225,17 @@ public:
 		Monitor::Exit(_monitor);
 	}
 
-	void ReleaseReader(BlockManipulator& br, unsigned nrOfReads = 1)
+	void ReleaseReader(BlockManipulator& br, BOOL noMoreInteress = FALSE ,unsigned nrOfReads = 1)
 	{
 		Monitor::Enter(_monitor);
 		br._currVersion = _currGetVersion;
 
 		_currNrOfGets -= nrOfReads;
 		
-		CheckIfItWasTheLastRead();
+		if(noMoreInteress)
+			SetNumberOfGetsToFreeBlock(_maxNrOfGets-1);
 
+		CheckIfItWasTheLastRead();
 		
 		Monitor::Exit(_monitor);
 	}
@@ -290,47 +294,6 @@ public:
 	}
 
 	/// TODO: Make this code decent aka lock-free
-	void DecrementNumberOfGetsToFreeBlock()
-	{
-		Monitor::Enter(_monitor);
-
-		if(--_maxNrOfGets == 0)
-		{
-			_currNrOfGets = 0;
-			Monitor::Exit(_monitor);
-			return;
-		}
-
-		///
-		///	if the readers where signal before a reader can announce that he dont what to read more from this samples
-		///
-		if(_maxNrOfGets < _currNrOfGets)
-			_currNrOfGets = _maxNrOfGets;
-
-		///
-		///	After this change the queue may be in conditions to carry on 
-		///
-		CheckIfItWasTheLastRead();
-		Monitor::Exit(_monitor);
-	}
-
-	///
-	///	Increment the number of gets required to free some block from reading, this method should be only called when there are no readers
-	///
-	void IncrementNumberOfGetsToFreeBlock()
-	{
-		Monitor::Enter(_monitor);
-		///
-		///	Assert if there are no readers
-		///
-		Assert::Equals(_maxNrOfGets,_currNrOfGets)
-		
-			_maxNrOfGets++;
-
-		_currNrOfGets = _maxNrOfGets;
-		
-		Monitor::Exit(_monitor);
-	}
 
 	///
 	///	
@@ -341,9 +304,12 @@ public:
 		///
 		///	Assert if there are no readers
 		///
-		Assert::Equals(_maxNrOfGets,_currNrOfGets);
+		Assert::True(_maxNrOfGets >= _currNrOfGets || _maxNrOfGets == 0 && _currNrOfGets == 0 && nrOfGets > 0);
 
-		_currNrOfGets  = _maxNrOfGets = nrOfGets;
+		if(_maxNrOfGets == 0 && _currNrOfGets == 0 && nrOfGets > 0)
+			_currNrOfGets =	nrOfGets;
+
+		_maxNrOfGets = nrOfGets;
 
 		Monitor::Exit(_monitor);
 	}

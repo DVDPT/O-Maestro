@@ -1,5 +1,5 @@
 /* ----------------------------------------------------------------------------
-*         Tiago Dias (tdias@deetc.isel.ipl.pt)  -  ISEL, IPL - DEETC  -
+*         Diogo Cardoso & Ana Correia PS 2010/2011 DEETC - ISEL
 * ----------------------------------------------------------------------------
 *
 * Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,14 @@ SECTIONS
 		. = ALIGN(4);
 		__startup_end__ = ABSOLUTE(.);
 	} > ram
+
+	.targetconfig : {
+	__targetconfig__ = ABSOLUTE(.);
+	*(.targetconfig*);
+	
+	. = ALIGN(4);
+	__targetconfig__ = ABSOLUTE(.);
+	} > ram
 	
 	.text  : {
 		__text_start__ = ABSOLUTE(.);
@@ -90,6 +98,7 @@ SECTIONS
 	.init_array ALIGN(4) : {
 		__ctors_init__ = ABSOLUTE(.);
 		*(.init_array);
+		__ctors_end__ = ABSOLUTE(.);
 	} > eram
 
 	__stack_top__ = __stack_end__;

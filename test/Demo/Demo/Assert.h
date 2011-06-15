@@ -16,4 +16,14 @@ public:
 		}
 	}
 
+	static void True(BOOL expr)
+	{
+		if(!expr)
+		{
+			perror("ERROR expression isn't valid");
+
+			for(;;);
+		}
+	}
+
 };
