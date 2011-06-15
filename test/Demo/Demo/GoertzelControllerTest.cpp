@@ -5,12 +5,12 @@ extern GoertzelFrequeciesBlock* goertzelBlocks;
 
 void ControllerCallback(GoertzelResult * results, int nrOfResults);
 
-#define NUMBER_OF_RUNS (8)
+#define NUMBER_OF_RUNS (2)
 #define PI (4*atan(1.0))  
 #define AMPLITUDE (1000)
 #define NR_OF_SAMPLES (GOERTZEL_CONTROLLER_BUFFER_SIZE * 5 * NUMBER_OF_RUNS)
 #define FREQUENCIES_MAX_VALUE (180)
-#define DELAY_ON_SAMPLES_BLOCK (100)
+#define DELAY_ON_SAMPLES_BLOCK (0)
 
 GoertzelController<GOERTZEL_CONTROLLER_SAMPLES_TYPE,
 	GOERTZEL_CONTROLLER_BUFFER_SIZE,
@@ -38,7 +38,7 @@ void ControllerCallback(GoertzelResult * results, int nrOfResults)
 	int res = 0;
 	for (int i = 0; i < nrOfResults; ++i)
 	{
-		if(results[i].percentage >= 5)
+		if(results[i].percentage >= 10)
 		{
 			GetFrequencyStringRepresentation(results[i].frequency,strbuf);
 			printf("|\t %s \t Percentage: %d \t PresentInInputSignal:%s\n",strbuf,
