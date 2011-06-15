@@ -235,19 +235,15 @@ public:
 		if(noMoreInteress)
 			SetNumberOfGetsToFreeBlock(_maxNrOfGets-1);
 
-		CheckIfItWasTheLastRead();
-		
+		ReleaseReadersIfPossible();
 		Monitor::Exit(_monitor);
 	}
 
-	void CheckIfItWasTheLastRead() 
+	void ReleaseReadersIfPossible() 
 	{
-		if(_currNrOfGets == 0)
+		//Assert::That(_currNrOfGets == 0,"Release readers called but _currNrOfGets != 0");
+		if(_maxNrOfGets != 0 && _currNrOfGets == 0)
 		{
-			///
-			///	this was the last Get that can be done for one specific block
-			///
-
 			///
 			///	wake putters and getters waiting 
 			///
@@ -272,7 +268,6 @@ public:
 			///	increment version counter
 			///
 			_currGetVersion++;
-
 		}
 	}
 
@@ -304,14 +299,25 @@ public:
 		///
 		///	Assert if there are no readers
 		///
-		Assert::True(_maxNrOfGets >= _currNrOfGets, "MaxNrOfGets lower that currNrOfGets");
-		Assert::True(_maxNrOfGets == 0 && _currNrOfGets == 0, "MaxNrOfGetts or CurrNrOfGets Not zero"); 
-
-		if(_maxNrOfGets == 0 && _currNrOfGets == 0 )
-			_currNrOfGets =	nrOfGets;
-
+		Assert::That(_maxNrOfGets >= _currNrOfGets ||  _maxNrOfGets == 0 && _currNrOfGets == 0, "MaxNrOfGets lower that currNrOfGets or MaxNrOfGetts or CurrNrOfGets Not zero");
+		 
 		_maxNrOfGets = nrOfGets;
 
+		Monitor::Exit(_monitor);
+	}
+
+	void UnlockReaders(int nrOfReaders)
+	{
+		Monitor::Enter(_monitor);
+		
+		Assert::That(_maxNrOfGets == 0,"Try to unlock readers without all of them release the previous reader");
+		
+		SetNumberOfGetsToFreeBlock(nrOfReaders);
+
+		ReleaseReadersIfPossible();
+
+		_currNrOfGets =	nrOfReaders;
+		
 		Monitor::Exit(_monitor);
 	}
 

@@ -393,7 +393,7 @@ class GoertzelController
 			///
 			gc->_processedBlocks = 0;
 
-			gc->_samplesQueue.SetNumberOfGetsToFreeBlock(gc->_nrOfFrequenciesBlocks);
+			gc->_samplesQueue.UnlockReaders(gc->_nrOfFrequenciesBlocks);
 			///
 			/// Notify Filters to fetch blocks
 			///

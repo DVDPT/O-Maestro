@@ -16,11 +16,11 @@ public:
 		}
 	}
 
-	static void True(BOOL expr, char * msg)
+	static void That(BOOL expr, char * onError)
 	{
 		if(!expr)
 		{
-			printf("ERROR expression isn't valid - %s\n",msg);
+			printf("ERROR expression isn't valid - %s\n",onError);
 
 			for(;;);
 		}
