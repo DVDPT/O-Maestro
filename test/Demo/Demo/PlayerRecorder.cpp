@@ -45,14 +45,14 @@ bool PlayerRecorder::record( unsigned int numberOfSeconds, unsigned int sampling
 	//short * samples =new short[ totalNumberOfSamples ];      
 
 	// Actualizar os dados de preparacao de envio para a card.   
-	WAVEHDR pcmPrepare;      
+	volatile WAVEHDR pcmPrepare;      
 	pcmPrepare.lpData = (LPSTR)signal;
 	pcmPrepare.dwFlags = 0;
 	pcmPrepare.dwBufferLength = totalNumberOfSamples;
 	pcmPrepare.dwBytesRecorded = 0;
 
 	// Preparar o envio para a card audio.
-	err = waveInPrepareHeader(audhandleIn, &pcmPrepare, sizeof(pcmPrepare));
+	err = waveInPrepareHeader(audhandleIn, (WAVEHDR*)&pcmPrepare, sizeof(pcmPrepare));
 	if ( MMSYSERR_NOERROR!=err ) {
       //delete [] samples;
       return false;   
@@ -69,13 +69,12 @@ bool PlayerRecorder::record( unsigned int numberOfSeconds, unsigned int sampling
 	}
 
 	// Indicar o array de amostras para onde colocar as amostras.
-	err = waveInAddBuffer(audhandleIn, &pcmPrepare, sizeof(pcmPrepare));
+	err = waveInAddBuffer(audhandleIn, (WAVEHDR*)&pcmPrepare, sizeof(pcmPrepare));
 	if ( MMSYSERR_NOERROR!=err ) {
 		//delete [] samples;
 		return false;   
 	}
 	while( !(pcmPrepare.dwFlags&WHDR_DONE) );
-
 	// Fechar o descritor de input da card.
 	err = waveInClose( audhandleIn ); 
    

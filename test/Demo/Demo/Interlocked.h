@@ -12,7 +12,6 @@ public:
 
 	static int Increment(volatile int * ref)
 	{
-		Add((unsigned *)ref,1);
-		return *ref;
+		return Add((unsigned *)ref,1)+1;
 	}
 };

@@ -177,9 +177,8 @@ public:
 				break;
 			
 			Monitor::Wait(_monitor);
-
 		} while(true);
-
+		
 		///
 		///	Set the initial position of the witter at put position
 		///
@@ -200,7 +199,7 @@ public:
 	void AdquireReaderBlock(BlockManipulator& br)
 	{
 		Monitor::Enter(_monitor);
-
+		Assert::That(_maxNrOfGets >= _currNrOfGets, "Curr number of gets lower that maxNrOfGets");
 		do
 		{
 			if(!IsEmpty() && _currGetVersion > br._currVersion)
@@ -236,6 +235,7 @@ public:
 			SetNumberOfGetsToFreeBlock(_maxNrOfGets-1);
 
 		ReleaseReadersIfPossible();
+
 		Monitor::Exit(_monitor);
 	}
 

@@ -284,8 +284,8 @@ class GoertzelController
 				///
 				///	If this is the last Filter going to sleep wake up Controller to hand over the results
 				///
-				Interlocked::Increment(&gc._processedBlocks);
-				if(gc._processedBlocks == (gc._nrOfFrequenciesBlocks))
+				
+				if(Interlocked::Increment(&gc._processedBlocks) == (gc._nrOfFrequenciesBlocks))
 				{
 					gc._controllerEvent.Set();
 				}
