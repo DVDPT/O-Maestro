@@ -389,7 +389,7 @@ class GoertzelController
 			gc->InitializeGoertzelResults();
 
 			///
-			///	Reset processed Frequencies
+			///	Reset processed blocks
 			///
 			gc->_processedBlocks = 0;
 

@@ -59,7 +59,7 @@ double const block0filterValues[] =
 	0.00563079054465151,
 	0.00451035839949659,
 };
-GoertzelFrequeciesBlock const block0 = { 275, 169, 32, 15,(double*)block0filterValues,(GoertzelFrequency*)block0Freqs };
+GoertzelFrequeciesBlock const block0 = { 275, 137, 32, 15,(double*)block0filterValues,(GoertzelFrequency*)block0Freqs };
 GoertzelFrequency const block1Freqs[] = 
 {
 	{ 65.4064, 1.46718785998182 },

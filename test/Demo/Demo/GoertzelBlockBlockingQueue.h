@@ -304,9 +304,10 @@ public:
 		///
 		///	Assert if there are no readers
 		///
-		Assert::True(_maxNrOfGets >= _currNrOfGets || _maxNrOfGets == 0 && _currNrOfGets == 0 && nrOfGets > 0);
+		Assert::True(_maxNrOfGets >= _currNrOfGets, "MaxNrOfGets lower that currNrOfGets");
+		Assert::True(_maxNrOfGets == 0 && _currNrOfGets == 0, "MaxNrOfGetts or CurrNrOfGets Not zero"); 
 
-		if(_maxNrOfGets == 0 && _currNrOfGets == 0 && nrOfGets > 0)
+		if(_maxNrOfGets == 0 && _currNrOfGets == 0 )
 			_currNrOfGets =	nrOfGets;
 
 		_maxNrOfGets = nrOfGets;
