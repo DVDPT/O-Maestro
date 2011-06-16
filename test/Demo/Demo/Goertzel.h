@@ -3,8 +3,10 @@
 #include "LowPassFilter.h"
 
 
-#define GOERTZEL_NR_OF_FREQUENCIES (88)
-#define GOERTZEL_NR_OF_BLOCKS (6)
+
+
+#define GOERTZEL_NR_OF_FREQUENCIES (76)
+#define GOERTZEL_NR_OF_BLOCKS (5)
 #define GOERTZEL_FREQUENCY_MAX_N (180)
 #define GOERTZEL_QUEUE_MAX_BLOCKS (40*5)
 #define GOERTZEL_CONTROLLER_BUFFER_SIZE (((GOERTZEL_FREQUENCY_MAX_N + (sizeof(double)/sizeof(short))) * GOERTZEL_QUEUE_MAX_BLOCKS))
@@ -15,6 +17,8 @@ struct GoertzelFrequency
 {
 	int frequency;	///< the target frequency.
 	double coefficient;	///< the frequency pre-calculated coefficient.
+	char* englishNotation;
+	char* portugueseNotation;
 };
 
 
@@ -31,7 +35,7 @@ struct GoertzelFrequeciesBlock
 
 struct GoertzelResult
 {
-	int frequency;	///< The frequency in question.
+	GoertzelFrequency* frequency;	///< The frequency in question.
 	int percentage;	///< The percentage of the frequency in a given sample.
 };
 

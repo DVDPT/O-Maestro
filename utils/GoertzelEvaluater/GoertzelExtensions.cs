@@ -8,29 +8,62 @@ namespace GoertzelEvaluater
 {
     public static class GoertzelExtensions
     {
+       
+        static readonly string[] EnglishNotation =    new[]{  "C", "C#",     "D","D#",      "E", "F", "F#",      "G",  "G#",      "A", "A#",     "B"  };
+        static readonly string[] PortugueseNotation = new[] { "DO","DO#/REb","RE","RE#/MIb","MI","FA","FA#/SOLb","SOL","SOL#/LAb","LA","LA#/SIb","SI" };
+
+
+        const int LOWEST_FREQUENCY_NOTATION_POSITION = 9;
+        const int MINIMUM_SCALE = 1;
+        
+
+        private static IEnumerable<Tuple<string,string>> GetNotations()
+        {
+            var next = LOWEST_FREQUENCY_NOTATION_POSITION;
+            var currScale = MINIMUM_SCALE;
+            while (true)
+            {
+                for (int i = next; i < EnglishNotation.Length; ++i)
+                {
+                    yield return new Tuple<string, string>(string.Format("{0}({1})",EnglishNotation[i],currScale),
+                                                           string.Format("{0}({1})",PortugueseNotation[i],currScale));
+                }
+                next = 0;
+                currScale++;
+            }
+        }
+
         public static void PrintStructDefinitions(this IEnumerable<GoertzelFrequenciesBlock> freqs, TextWriter writer)
         {
             int block = 0;
+            var notations = GetNotations().GetEnumerator();
+
             writer.WriteLine("#include \"Goertzel.h\"\n");
             
             writer.WriteLine("#define GOERTZEL_NR_OF_FREQUENCIES ({0})",freqs.Sum(bl=>bl.Frequencies.Length));
             writer.WriteLine("#define GOERTZEL_NR_OF_BLOCKS ({0})",freqs.Count());
             writer.WriteLine("#define GOERTZEL_FREQUENCY_MAX_N ({0})",freqs.Max(bl=>bl.N));
-            writer.WriteLine("#define GOERTZEL_CONTROLLER_BUFFER_SIZE ({0})", 8000);
+            writer.WriteLine("#define GOERTZEL_QUEUE_MAX_BLOCKS (40*5)");
+            writer.WriteLine("#define GOERTZEL_CONTROLLER_BUFFER_SIZE (((GOERTZEL_FREQUENCY_MAX_N + (sizeof(double)/sizeof(short))) * GOERTZEL_QUEUE_MAX_BLOCKS))");
             writer.WriteLine("#define GOERTZEL_CONTROLLER_FS ({0})", Program.FS);
             writer.WriteLine("#define GOERTZEL_CONTROLLER_SAMPLES_TYPE {0}", "short");
 
             writer.WriteLine();
             foreach (var freq in freqs)
             {
-                
+               
                 writer.WriteLine("GoertzelFrequency const block{0}Freqs[] = \n{{", block);
                 foreach (var goertzelFrequency in freq.Frequencies)
                 {
-                    writer.WriteLine("\t{{ {0}, {1} }},",
+                    notations.MoveNext();
+                    writer.WriteLine("\t{{ {0}, {1}, \"{2}\", \"{3}\" }},",
                                             goertzelFrequency.Frequency.ToString().Replace(',', '.'),
-                                            goertzelFrequency.Coefficient.ToString().Replace(',', '.')
+                                            goertzelFrequency.Coefficient.ToString().Replace(',', '.'),
+                                            notations.Current.Item1,
+                                            notations.Current.Item2
+
                                      );
+                    
                 }
                 writer.WriteLine("};");
 
@@ -88,8 +121,11 @@ namespace GoertzelEvaluater
 
             var bandwidthGain = realBandwidth*10/100;
 
-            var smallerFrequency = realSmallerFrequency + bandwidthGain;
-            var biggestFrequency = realBiggestFrequency - bandwidthGain;
+            //var smallerFrequency = realSmallerFrequency + bandwidthGain;
+            //var biggestFrequency = realBiggestFrequency - bandwidthGain;
+            
+            var smallerFrequency = realSmallerFrequency;
+            var biggestFrequency = realBiggestFrequency;
 
             var smallerFrequencyW0 = GetW0(smallerFrequency, Program.FS) ;
 

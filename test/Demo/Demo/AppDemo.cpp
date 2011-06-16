@@ -25,20 +25,23 @@ short signal[SIZE_OF_SIGNAL];
 
 void ControllerCallback(GoertzelResult * results, int nrOfResults)
 {
-	int threshold = 80;
+	int threshold = 60;
 	//printf("New Results\n");
 	for(int i=0; i<nrOfResults; i++)
 	{
-		if(i < 37)
-			threshold = 80;
+	
 
 		if(results[i].percentage >= threshold)
 		{
-			printf("Frequency %d foi encontada com a percentagem %d\n",results[i].frequency, results[i].percentage);
+			printf("Found --> PT:%s \t| EN:%s  \t| Frequency:%d \t| Percentage:%d%%\n",
+						results[i].frequency->portugueseNotation,
+						results[i].frequency->englishNotation,
+						results[i].frequency->frequency, 
+						results[i].percentage
+					);
 		}
-
-		if(i<37)
-			threshold = 80;
+		
+	
 	}
 
 }
@@ -74,7 +77,7 @@ void DivideFrequency(short * buf, int sizeBuf,short * signal, int sizeSignal)
 
 void Demo()
 {
-	/*/
+	//
 	double powerThreshold = 0;
 	printf("Analysing surrounding environment for %dsec",NUMBER_OF_RUNS_TO_CHECK_ENVIRONMENT);
 	for(int i = 0; i < NUMBER_OF_RUNS_TO_CHECK_ENVIRONMENT; ++i)
@@ -95,7 +98,7 @@ void Demo()
 
 	while(true)
 	{
-		if(kbhit())
+		if(_kbhit())
 		{
 			char c = getchar();
 			if(c == 'c')
@@ -105,8 +108,9 @@ void Demo()
 		{
 			//printf("Processar Notas musicais\n");
 			//PlayerRecorder::play(signal,8800,1);
-			//if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
-			SendToGoertzelController(signal,SIZE_OF_SIGNAL);
+			
+			if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
+				SendToGoertzelController(signal,SIZE_OF_SIGNAL);
 		}
 
 	}

@@ -18,7 +18,7 @@ typedef void (*GoertzelControllerCallback)(GoertzelResult * results,int nrOfResu
 ///		This value is important so that a call to Goertzel only occurs when
 ///		some of the block frequencies are present in the input signal
 ///
-#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (8)
+#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (10)
 
 template <	
 	class SamplesBufferType,
@@ -414,7 +414,7 @@ class GoertzelController
 			for(int freq = 0; freq < _frequenciesBlock[block].blockNrOfFrequencies; ++freq)
 			{
 				GoertzelResult * result = GetFrequencyResult(block,freq);
-				result->frequency = _frequenciesBlock[block].frequencies[freq].frequency;
+				result->frequency = &_frequenciesBlock[block].frequencies[freq];
 
 
 			}

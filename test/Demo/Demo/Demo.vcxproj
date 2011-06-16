@@ -69,6 +69,7 @@
     <ClInclude Include="list.h" />
     <ClInclude Include="LowPassFilter.h" />
     <ClInclude Include="Monitor.h" />
+    <ClInclude Include="Notes.h" />
     <ClInclude Include="PlayerRecorder.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Utils.h" />
@@ -78,6 +79,7 @@
     <ClCompile Include="AppDemo.cpp" />
     <ClCompile Include="GoertzelConfiguration.cpp" />
     <ClCompile Include="Monitor.cpp" />
+    <ClCompile Include="Notes.cpp" />
     <ClCompile Include="PlayerRecorder.cpp" />
     <ClCompile Include="VersionEvent.cpp" />
   </ItemGroup>

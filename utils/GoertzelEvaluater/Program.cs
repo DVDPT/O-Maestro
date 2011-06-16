@@ -42,7 +42,7 @@ namespace GoertzelEvaluater
      
 
         private static double[] notes = {
-                                     27.5, //
+                                     /*27.5, //
                                      29.1352,
                                      30.8677,
                                      32.7032,
@@ -53,7 +53,7 @@ namespace GoertzelEvaluater
                                      43.6535,
                                      46.2493,
                                      48.9994,
-                                     51.9131,
+                                     51.9131,*/
                                      55.0000,
                                      58.2705,
                                      61.7354,
