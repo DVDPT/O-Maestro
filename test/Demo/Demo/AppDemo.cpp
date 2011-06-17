@@ -6,7 +6,7 @@
 #include "GoertzelController.h"
 
 
-
+//#define TEN_BIT_SAMPLES 
 #define SAMPLING_TIME_SECONDS (1)
 #define SIZE_OF_SIGNAL (GOERTZEL_CONTROLLER_FS * SAMPLING_TIME_SECONDS)
 #define NUMBER_OF_RUNS_TO_CHECK_ENVIRONMENT (10)
@@ -25,12 +25,12 @@ short signal[SIZE_OF_SIGNAL];
 
 void ControllerCallback(GoertzelResult * results, int nrOfResults)
 {
-	int threshold = 60;
+	int threshold = 70;
 	//printf("New Results\n");
 	for(int i=0; i<nrOfResults; i++)
 	{
 	
-
+		if(results[i].frequency->frequency == 880)threshold = 60;
 		if(results[i].percentage >= threshold)
 		{
 			printf("Found --> PT:%s \t| EN:%s  \t| Frequency:%d \t| Percentage:%d%%\n",
@@ -40,7 +40,7 @@ void ControllerCallback(GoertzelResult * results, int nrOfResults)
 						results[i].percentage
 					);
 		}
-		
+		if(results[i].frequency->frequency == 880)threshold = 70;
 	
 	}
 
@@ -63,17 +63,17 @@ double GetPowerFromSignal(short * signal, int signalSize)
 {
 	double power = 0;
 	for(int i = 0; i < signalSize; ++i)
+	{	
+#ifdef TEN_BIT_SAMPLES
+		signal[i] = signal[i] >> 6;
+#endif
+
 		power += signal[i] * signal[i];
+	}
 	return power;
 }
 
-void DivideFrequency(short * buf, int sizeBuf,short * signal, int sizeSignal)
-{
-	int offset = sizeSignal / sizeBuf;
 
-	for(int i = 0, j = 0; i < sizeSignal && j < sizeBuf; i+=offset,++j)
-		buf[j] = signal[i];
-}
 
 void Demo()
 {
@@ -109,7 +109,7 @@ void Demo()
 			//printf("Processar Notas musicais\n");
 			//PlayerRecorder::play(signal,8800,1);
 			
-			if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
+			//if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
 				SendToGoertzelController(signal,SIZE_OF_SIGNAL);
 		}
 

@@ -108,8 +108,8 @@ namespace GoertzelEvaluater
 
         private static void FillBlockFilter(GoertzelFrequenciesBlock block)
         {
-            var realSmallerFrequency = block.Frequencies.First().Frequency ;
-            var realBiggestFrequency = block.Frequencies.Last().Frequency ;
+            var realSmallerFrequency = block.Frequencies.Min().Frequency ;
+            var realBiggestFrequency = block.Frequencies.Max().Frequency ;
             
             /*/
             var percentage = bandwidth*0.1;
@@ -137,10 +137,6 @@ namespace GoertzelEvaluater
             //Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
             GetFilterValues(smallerFrequencyW0, biggestFrequencyW0, block.FilterValues);
 
-            if (smallerFrequency == 2093)
-            {
-                
-            }
             var maxValue = GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS);
             
             List<double> d = new List<double>();
@@ -152,7 +148,7 @@ namespace GoertzelEvaluater
 
             block.FilterValues = d;
 
-            Console.WriteLine(GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS));
+            //Console.WriteLine(GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS));
 
 
 
