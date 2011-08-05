@@ -1,6 +1,6 @@
-#include "types.h"
+
 #include "StructsLPC229x.h"
-#include "Address.h"
+#include "PeripheralsAddress.h"
 
 
 
@@ -23,3 +23,22 @@ void startUpYAAB_2294()
 	initExternalMemory();
 
 }
+
+typedef void(*Constructor)();
+void init_constructors(Constructor * ctorsBegin, Constructor * ctorsEnd)
+{
+for(;ctorsBegin != ctorsEnd; ctorsBegin++)
+{
+(*ctorsBegin)();
+}
+}
+
+void init_bss(char * startBss, char* endBss)
+{
+for( ; startBss != endBss; ++startBss)
+{
+*startBss = 0;
+}
+}
+
+

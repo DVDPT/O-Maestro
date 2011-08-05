@@ -4,13 +4,19 @@
  *  Created on: 20 de Mai de 2011
  *      Author: Sorcha
  */
-#include "types.h"
 #pragma once
+#include "Types.h"
+
 
 
 class Bit {
+
+
 public:
+	static U32 MultiplyDeBruijnBitPosition[32];
+
 	Bit();
+
 
 	static U32 modifyBit(U32 x, U8 position, char newState)
 	{
@@ -21,8 +27,8 @@ public:
 
 	static U32 modifyBits(U8 position, U32 newValue, U32 x, U32 numberOfBits)
 	{
-		U32 reset = ~(numberOfBits<<position);
-		U32 value = ((newValue<<position)|reset) & x;
+		U32 mask = (numberOfBits<<position);
+		U32 value = (x & ~mask) | ((newValue<<position) & mask);
 		return value;
 
 
@@ -51,6 +57,14 @@ public:
 	   U32 mask = 1 << position;
 	   return x & ~mask;
 	}
+
+	static U32 getLowestBitSet(U32 value)
+		{
+			value  &= -value;
+			value  *= 0x077CB531;
+			value >>= 27;
+			return MultiplyDeBruijnBitPosition[value];
+		}
 
 };
 

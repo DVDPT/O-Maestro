@@ -5,8 +5,8 @@
  *      Author: Sorcha
  */
 
-#include "StructsLPC229x.h"
 #pragma once
+
 
 
 
@@ -17,6 +17,4 @@
 class LPC2294
 {
 
-public:
-	void pinSelect(U32 pin, U32 mask);
 };

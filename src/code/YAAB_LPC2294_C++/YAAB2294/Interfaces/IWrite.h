@@ -6,12 +6,12 @@
  */
 
 #pragma once
-
+#include "Types.h"
 
 class IWrite
 {
 public:
-	virtual void WriteString(const char * string);
+	virtual void WriteString(const U8 * string, U32 length);
 	virtual void WriteInt(U32 number);
 	virtual void WriteChar(U8 character);
 };

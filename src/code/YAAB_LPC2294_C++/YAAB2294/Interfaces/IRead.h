@@ -7,12 +7,12 @@
 
 
 #pragma once
-#include "types.h"
+#include "Types.h"
 
 class IRead
 {
 public:
-	virtual void ReadString(char * string);
+	virtual U8* ReadString(U8 * string, U32 length);
 	virtual U32 ReadInt();
 	virtual U8 ReadChar();
 };

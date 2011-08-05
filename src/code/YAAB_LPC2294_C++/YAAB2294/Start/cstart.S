@@ -1,4 +1,4 @@
-	.section	.startup, "ax"
+/*	.section	.startup, "ax"
 	.global	_start
 
 _start:
@@ -31,6 +31,6 @@ callMain:
 	.section	.stack
 	.space	1024
 
-
+*/
 
 

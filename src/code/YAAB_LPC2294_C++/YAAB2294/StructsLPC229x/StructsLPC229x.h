@@ -7,26 +7,25 @@
 
 #pragma once
 
-typedef unsigned int LPC2294_REG;
-
 
 typedef struct _ExternalMemoryController
 {
-	LPC2294_REG BCFG0;
-	LPC2294_REG BCFG1;
-	LPC2294_REG BCFG2;
-	LPC2294_REG BCFG3;
+	int BCFG0;
+	int BCFG1;
+	int BCFG2;
+	int BCFG3;
 
 }LPC22xx_ExternalMemoryController,*LPC22xxP_ExternalMemoryController;
 
 typedef struct _GPIO
 {
-	LPC2294_REG IOPIN;
-	LPC2294_REG IOSET;
-	LPC2294_REG IODIR;
-	LPC2294_REG IOCLR;
+	int IOPIN;
+	int IOSET;
+	int IODIR;
+	int IOCLR;
 
 }LPC22xx_GPIO,*LPC22xxP_GPIO;
+
 
 
 
