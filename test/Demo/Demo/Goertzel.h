@@ -9,6 +9,8 @@
 #define GOERTZEL_NR_OF_BLOCKS (5)
 #define GOERTZEL_FREQUENCY_MAX_N (180)
 #define GOERTZEL_QUEUE_MAX_BLOCKS (40*5)
+#define GOERTZEL_MAX_NR_OF_MULTIPLE_FREQUENCIES_SIMULTANEOUS (20)
+#define GOERTZEL_MINIMUM_PERCENTAGE_THRESHOLD (10)
 #define GOERTZEL_CONTROLLER_BUFFER_SIZE (((GOERTZEL_FREQUENCY_MAX_N + (sizeof(double)/sizeof(short))) * GOERTZEL_QUEUE_MAX_BLOCKS))
 #define GOERTZEL_CONTROLLER_FS (8800)
 #define GOERTZEL_CONTROLLER_SAMPLES_TYPE short
@@ -33,10 +35,18 @@ struct GoertzelFrequeciesBlock
 	GoertzelFrequency* frequencies;
 };
 
+
 struct GoertzelResult
 {
 	GoertzelFrequency* frequency;	///< The frequency in question.
 	int percentage;	///< The percentage of the frequency in a given sample.
+};
+
+struct GoertzelResultCollection
+{
+	GoertzelResult results[GOERTZEL_MAX_NR_OF_MULTIPLE_FREQUENCIES_SIMULTANEOUS];	///< An array with all results produced by the Goertzel Filter.
+	int blocksUsed;	///< The blocks used to produce the results.
+	int nrOfResults;	///< The length of @results.
 };
 
 template <class T>
@@ -54,9 +64,9 @@ class Goertzel
 
 public:
 
-	static void CalculateGoertzel(T * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const double totalPower)
+	static bool CalculateGoertzel(T * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const double totalPower)
 	{
-		double Q0,Q1,Q2,samplesPower = 0;
+		double Q0,Q1,Q2;
 		Q0 = Q1 = Q2 = 0;
 		for(int i = 0; i < samplesSize; i++)
 		{
@@ -69,7 +79,13 @@ public:
 		double freqPower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,freq->coefficient) , samplesSize);
 		result->percentage = freqPower * 100 / totalPower;
 		
-		if(result->percentage > 10)
-		;//printf("TotalPower: %f \t ThisPower: %f \t freq: %d \t percentage:%d%%\n",totalPower,freqPower,freq->frequency,result->percentage);
+		if(result->percentage > GOERTZEL_MINIMUM_PERCENTAGE_THRESHOLD)
+		{
+			result->frequency = freq;
+			return true;
+		}
+		
+
+		return false;
 	}
 };

@@ -21,7 +21,7 @@ ENTRY(_start)
 
 MEMORY
 {
-	/* LPC2106's internal RAM has 64kB */
+	/* LPC2294's internal RAM has 64kB */
 	  eram : ORIGIN = 0x81000000, LENGTH = 8192k
       ram : ORIGIN = 0x40000000, LENGTH = 16k
 	  
@@ -38,6 +38,7 @@ SECTIONS
 	.debug_str      0 : { *(.debug_str) }
 	.debug_loc      0 : { *(.debug_loc) }
 	.debug_macinfo  0 : { *(.debug_macinfo) }
+	
 
 	.startup : {
 		__startup_start__ = ABSOLUTE(.);

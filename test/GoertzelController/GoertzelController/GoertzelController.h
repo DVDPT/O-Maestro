@@ -30,8 +30,6 @@ template <
 >   
 class GoertzelController
 {
-	
-
 	///
 	///	The buffer to pass along to the BlockBlockingQueue
 	///

@@ -47,7 +47,7 @@ public:
 	void enableInterrupt();
 	void disableInterrupt();
 	void endProcessTreatmentInterrupt();
-	void processInterrupt();
+	int processInterrupt();
 
 
 };

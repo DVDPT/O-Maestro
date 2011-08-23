@@ -56,16 +56,13 @@ void VectorInterruptController::endProcessTreatmentInterrupt()
 	_interruptController->VICVectAddr = 0;
 }
 
-void VectorInterruptController::processInterrupt()
+int VectorInterruptController::processInterrupt()
 {
 	int irqsStatus, currentIrq;
 	irqsStatus = _interruptController->VICIRQStatus;
 	currentIrq = Bit::getLowestBitSet(irqsStatus);
 
-	if(currentIrq > 31)
-		return;
-
-	_isrs[currentIrq]();
+	return currentIrq;
 }
 
 void VectorInterruptController::enableInterrupt()

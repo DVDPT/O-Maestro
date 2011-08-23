@@ -52,11 +52,12 @@ public:
 
 	static void CalculateGoertzel(T * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const double totalPower)
 	{
-		double Q0,Q1,Q2,samplesPower = 0;
+		double Q0,Q1,Q2;
 		Q0 = Q1 = Q2 = 0;
+
 		for(int i = 0; i < samplesSize; i++)
 		{
-			Q0 = samples[i] + (freq->coefficient * Q1) - Q2 ;
+			Q0 = samples[i] + (freq->coefficient * Q1) - Q2;
 			Q2 = Q1;
 			Q1 = Q0;
 			

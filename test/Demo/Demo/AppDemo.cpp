@@ -12,7 +12,7 @@
 #define NUMBER_OF_RUNS_TO_CHECK_ENVIRONMENT (10)
 
 extern GoertzelFrequeciesBlock* goertzelBlocks;
-void ControllerCallback(GoertzelResult * results, int nrOfResults);
+void ControllerCallback(GoertzelResultCollection * results);
 
 GoertzelController<GOERTZEL_CONTROLLER_SAMPLES_TYPE,
 	GOERTZEL_CONTROLLER_BUFFER_SIZE,
@@ -23,24 +23,22 @@ GoertzelController<GOERTZEL_CONTROLLER_SAMPLES_TYPE,
 
 short signal[SIZE_OF_SIGNAL];
 
-void ControllerCallback(GoertzelResult * results, int nrOfResults)
+void ControllerCallback(GoertzelResultCollection * results)
 {
 	int threshold = 70;
-	//printf("New Results\n");
-	for(int i=0; i<nrOfResults; i++)
+	for(int i=0; i<results->nrOfResults; i++)
 	{
-	
-		if(results[i].frequency->frequency == 880)threshold = 60;
-		if(results[i].percentage >= threshold)
+		if(results->results[i].frequency->frequency == 880)threshold = 60;
+		if(results->results[i].percentage >= threshold)
 		{
 			printf("Found --> PT:%s \t| EN:%s  \t| Frequency:%d \t| Percentage:%d%%\n",
-						results[i].frequency->portugueseNotation,
-						results[i].frequency->englishNotation,
-						results[i].frequency->frequency, 
-						results[i].percentage
+						results->results[i].frequency->portugueseNotation,
+						results->results[i].frequency->englishNotation,
+						results->results[i].frequency->frequency, 
+						results->results[i].percentage
 					);
 		}
-		if(results[i].frequency->frequency == 880)threshold = 70;
+		if(results->results[i].frequency->frequency == 880)threshold = 70;
 	
 	}
 
@@ -109,7 +107,7 @@ void Demo()
 			//printf("Processar Notas musicais\n");
 			//PlayerRecorder::play(signal,8800,1);
 			
-			//if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
+			if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
 				SendToGoertzelController(signal,SIZE_OF_SIGNAL);
 		}
 
