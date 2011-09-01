@@ -3,9 +3,9 @@
 #include <math.h>
 extern GoertzelFrequeciesBlock* goertzelBlocks;
 
-void ControllerCallback(GoertzelResultCollection * col);
+void ControllerCallback(GoertzelResultCollection& col);
 
-#define NUMBER_OF_RUNS (1000)
+#define NUMBER_OF_RUNS ((unsigned int)-1)
 #define PI (4*atan(1.0))  
 #define AMPLITUDE (1000)
 //#define NR_OF_SAMPLES (GOERTZEL_FREQUENCY_MAX_N * GOERTZEL_NR_OF_BLOCKS * NUMBER_OF_RUNS * 5)
@@ -16,12 +16,7 @@ void ControllerCallback(GoertzelResultCollection * col);
 #define FREQUENCIES_MAX_VALUE (180)
 #define DELAY_ON_SAMPLES_BLOCK (100)
 
-GoertzelController<GOERTZEL_CONTROLLER_SAMPLES_TYPE,
-	GOERTZEL_CONTROLLER_BUFFER_SIZE,
-	GOERTZEL_CONTROLLER_FS,
-	GOERTZEL_NR_OF_FREQUENCIES,
-	GOERTZEL_FREQUENCY_MAX_N,
-	GOERTZEL_NR_OF_BLOCKS> goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerCallback);
+GoertzelController goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerCallback);
 
 ///	Freqs de ponta
 //double fos[] = {27.5,61.7354,65.4064,146.832,155.563,349.228,369.994,830.609,880,1975.53,2093,4186.01};
@@ -40,22 +35,22 @@ BOOL IsFrequencyPresentInTheInputSignal(int freq);
 
 long long time = 0;
 
-void ControllerCallback(GoertzelResultCollection * col)
+void ControllerCallback(GoertzelResultCollection& col)
 {
 	char strbuf[1000];
-	printf("\n------------------------------------------  RESULTS(%d)(%d)  ------------------------------------------\n",col->nrOfResults,col->blocksUsed);
+	printf("\n------------------------------------------  RESULTS(%d)(%d)  ------------------------------------------\n",col.nrOfResults,col.blocksUsed);
 
 
 	int res = 0;
-	for (int i = 0; i < col->nrOfResults; ++i)
+	for (int i = 0; i < col.nrOfResults; ++i)
 	{
-		if(col->results[i].percentage >= 5)
+		if(col.results[i].percentage >= 5)
 		{
-			GetFrequencyStringRepresentation(col->results[i].frequency->frequency,strbuf);
+			GetFrequencyStringRepresentation(col.results[i].frequency->frequency,strbuf);
 			//
 			printf("|\t %s \t Percentage: %d \t PresentInInputSignal:%s\n",strbuf,
-																		   col->results[i].percentage,
-																		   IsFrequencyPresentInTheInputSignal(col->results[i].frequency->frequency)?"TRUE":"FALSE");
+																		   col.results[i].percentage,
+																		   IsFrequencyPresentInTheInputSignal(col.results[i].frequency->frequency)?"TRUE":"FALSE");
 			//*/
 			res++;
 		}
@@ -95,8 +90,8 @@ bool sendToGoertzel(short * sinusoid, int size)
 	{
 		printf("\n\n ---------------------- NO MORE SAMPLES!!!! ---------------------- \n\n");
 		idx = 0;
-
-		return false;
+		
+		//return false;
 	}
 	if(!goertzelController.CanWriteSample())
 	{
