@@ -12,7 +12,11 @@ public:
 
 	static int Increment(volatile int * ref)
 	{
-		Add((unsigned *)ref,1);
-		return *ref;
+		return Add((unsigned *)ref,1)+1;
+	}
+
+	static int CompareExchange( unsigned int * ref,  unsigned int value,unsigned  int comparand)
+	{
+		return InterlockedCompareExchange((volatile unsigned int*)ref,value,comparand);
 	}
 };

@@ -11,7 +11,7 @@ VersionEvent::VersionEvent(BOOL initialState)
 void VersionEvent::Set()
 {
 	Monitor::Enter(_lock);
-	_version++;
+	_version=_version + 1;
 	Monitor::NotifyAll(_lock);
 	Monitor::Exit(_lock);
 }

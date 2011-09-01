@@ -18,7 +18,7 @@ typedef void (*GoertzelControllerCallback)(GoertzelResultCollection * results);
 ///		This value is important so that a call to Goertzel only occurs when
 ///		some of the block frequencies are present in the input signal
 ///
-#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (10)
+//#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (10)
 
 template <	
 	class SamplesBufferType,
@@ -225,7 +225,7 @@ class GoertzelController
 			float relationBetweenFilteredAndBlockPower = filteredSamplesPower * 100 / reader.GetBlockPower();
 
 
-			if(relationBetweenFilteredAndBlockPower >= ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER)
+			if(relationBetweenFilteredAndBlockPower >= GOERTZEL_FILTERED_SAMPLES_POWER_MINIMUM_PERCENTAGE_THRESHOLD)
 			{
 				///
 				///	We have all samples needed to process this block

@@ -12,6 +12,7 @@
 #define NUMBER_OF_RUNS_TO_CHECK_ENVIRONMENT (10)
 
 extern GoertzelFrequeciesBlock* goertzelBlocks;
+
 void ControllerCallback(GoertzelResultCollection * results);
 
 GoertzelController<GOERTZEL_CONTROLLER_SAMPLES_TYPE,
@@ -25,10 +26,10 @@ short signal[SIZE_OF_SIGNAL];
 
 void ControllerCallback(GoertzelResultCollection * results)
 {
-	int threshold = 70;
+	int threshold = 50;
 	for(int i=0; i<results->nrOfResults; i++)
 	{
-		if(results->results[i].frequency->frequency == 880)threshold = 60;
+		//if(results->results[i].frequency->frequency == 880)threshold = 60;
 		if(results->results[i].percentage >= threshold)
 		{
 			printf("Found --> PT:%s \t| EN:%s  \t| Frequency:%d \t| Percentage:%d%%\n",
@@ -107,7 +108,7 @@ void Demo()
 			//printf("Processar Notas musicais\n");
 			//PlayerRecorder::play(signal,8800,1);
 			
-			if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) > powerThreshold)
+			//if(GetPowerFromSignal(signal,SIZE_OF_SIGNAL) *2 > powerThreshold)
 				SendToGoertzelController(signal,SIZE_OF_SIGNAL);
 		}
 

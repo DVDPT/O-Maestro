@@ -3,7 +3,7 @@
 #include "Monitor.h"
 #include "Utils.h"
 #include "Assert.h"
-
+#include "GoertzelBase.h"
 
 enum TypeOfManipulation{READ, WRITE};
 
@@ -15,11 +15,15 @@ enum TypeOfManipulation{READ, WRITE};
 ///	NOTE:	The size of the buffer passed in the ctor should be multiple of sizeof(double) + blocksize
 ///			this is needed so that the queue stores the power of the input signal.
 ///
+
 template <class T>
 class GoertzelBlockBlockingQueue
 {
 
+
 public:
+	
+
 
 	struct BlockManipulator  
 	{
@@ -30,13 +34,13 @@ public:
 		///
 		///	This block power, calculated while the block was been writed
 		///
-		double * _currPower;
+		GoertzelPowerType * _currPower;
 		
 		///
 		///	The target queue
 		///
 		GoertzelBlockBlockingQueue& _queue;
-		
+
 		///
 		///	Control variables to access the buffer
 		///
@@ -63,8 +67,8 @@ public:
 		///
 		void SetCurrentPosition(int pos)
 		{
-			_currPower = (double*)&(_queue._buf[pos]);
-			_startPos = _currPos = (pos + (sizeof(double)/sizeof(T))); 
+			_currPower = (GoertzelPowerType*)&(_queue._buf[pos]);
+			_startPos = _currPos = (pos + (sizeof(GoertzelPowerType)/sizeof(T))); 
 			if(_tol == WRITE) 
 				*_currPower = 0;
 		};
@@ -93,7 +97,7 @@ public:
 			return TRUE;
 		}
 
-		double GetBlockPower()
+		GoertzelPowerType GetBlockPower()
 		{
 			return *_currPower;
 		}
@@ -121,11 +125,16 @@ public:
 
 		BOOL CanWrite() { return _tol == WRITE && _currPos != _lastPos; }
 
+		void SetBlockAsInvalid(){ *_currPower = 0; }
+
+		bool IsBlockValid() { return GetBlockPower() != 0; }
+
 	};
 
 private:
 	Monitor _monitor;
 
+	bool isCurrentWrittedBlockValid;
 
 	int _blockSize,  _bufSize;
 
@@ -159,11 +168,14 @@ public:
 		_get(0),
 		_blockSize((blockSize + (sizeof(double) / sizeof(T)))),		///Reserve space to save the block power
 		_buf(buffer),
-		_bufSize(bufferSize),
+		_bufSize(bufferSize/sizeof(T)),
 		_maxNrOfGets(numberOfGetsToFree),
 		_currNrOfGets(numberOfGetsToFree),
-		_currGetVersion(1)
-	{}
+		_currGetVersion(1),
+		isCurrentWrittedBlockValid(true)
+	{
+		
+	}
 
 	void AdquireWritterBlock(BlockManipulator& br)
 	{
@@ -173,11 +185,10 @@ public:
 		{
 			if(!IsFull() && _nextPut == -1)
 				break;
-
+			
 			Monitor::Wait(_monitor);
-
 		} while(true);
-
+		
 		///
 		///	Set the initial position of the witter at put position
 		///
@@ -198,7 +209,7 @@ public:
 	void AdquireReaderBlock(BlockManipulator& br)
 	{
 		Monitor::Enter(_monitor);
-
+		Assert::That(_maxNrOfGets >= _currNrOfGets, "Curr number of gets lower that maxNrOfGets");
 		do
 		{
 			if(!IsEmpty() && _currGetVersion > br._currVersion)
@@ -223,27 +234,26 @@ public:
 		Monitor::Exit(_monitor);
 	}
 
-	void ReleaseReader(BlockManipulator& br, unsigned nrOfReads = 1)
+	void ReleaseReader(BlockManipulator& br, BOOL noMoreInteress = FALSE ,unsigned nrOfReads = 1)
 	{
 		Monitor::Enter(_monitor);
 		br._currVersion = _currGetVersion;
 
 		_currNrOfGets -= nrOfReads;
 		
-		CheckIfItWasTheLastRead();
+		if(noMoreInteress)
+			SetNumberOfGetsToFreeBlock(_maxNrOfGets-1);
 
-		
+		ReleaseReadersIfPossible();
+
 		Monitor::Exit(_monitor);
 	}
 
-	void CheckIfItWasTheLastRead() 
+	void ReleaseReadersIfPossible() 
 	{
-		if(_currNrOfGets == 0)
+		//Assert::That(_currNrOfGets == 0,"Release readers called but _currNrOfGets != 0");
+		if(_maxNrOfGets != 0 && _currNrOfGets == 0)
 		{
-			///
-			///	this was the last Get that can be done for one specific block
-			///
-
 			///
 			///	wake putters and getters waiting 
 			///
@@ -268,7 +278,6 @@ public:
 			///	increment version counter
 			///
 			_currGetVersion++;
-
 		}
 	}
 
@@ -290,47 +299,6 @@ public:
 	}
 
 	/// TODO: Make this code decent aka lock-free
-	void DecrementNumberOfGetsToFreeBlock()
-	{
-		Monitor::Enter(_monitor);
-
-		if(--_maxNrOfGets == 0)
-		{
-			_currNrOfGets = 0;
-			Monitor::Exit(_monitor);
-			return;
-		}
-
-		///
-		///	if the readers where signal before a reader can announce that he dont what to read more from this samples
-		///
-		if(_maxNrOfGets < _currNrOfGets)
-			_currNrOfGets = _maxNrOfGets;
-
-		///
-		///	After this change the queue may be in conditions to carry on 
-		///
-		CheckIfItWasTheLastRead();
-		Monitor::Exit(_monitor);
-	}
-
-	///
-	///	Increment the number of gets required to free some block from reading, this method should be only called when there are no readers
-	///
-	void IncrementNumberOfGetsToFreeBlock()
-	{
-		Monitor::Enter(_monitor);
-		///
-		///	Assert if there are no readers
-		///
-		Assert::Equals(_maxNrOfGets,_currNrOfGets)
-		
-			_maxNrOfGets++;
-
-		_currNrOfGets = _maxNrOfGets;
-		
-		Monitor::Exit(_monitor);
-	}
 
 	///
 	///	
@@ -341,13 +309,32 @@ public:
 		///
 		///	Assert if there are no readers
 		///
-		Assert::Equals(_maxNrOfGets,_currNrOfGets);
-
-		_currNrOfGets  = _maxNrOfGets = nrOfGets;
+		Assert::That(_maxNrOfGets >= _currNrOfGets ||  _maxNrOfGets == 0 && _currNrOfGets == 0, "MaxNrOfGets lower that currNrOfGets or MaxNrOfGetts or CurrNrOfGets Not zero");
+		 
+		_maxNrOfGets = nrOfGets;
 
 		Monitor::Exit(_monitor);
 	}
 
+	void UnlockReaders(int nrOfReaders)
+	{
+		Monitor::Enter(_monitor);
+		
+		Assert::That(_maxNrOfGets == 0,"Try to unlock readers without all of them release the previous reader");
+		
+		SetNumberOfGetsToFreeBlock(nrOfReaders);
+
+		ReleaseReadersIfPossible();
+
+		_currNrOfGets =	nrOfReaders;
+		
+		Monitor::Exit(_monitor);
+	}
+
+	void DropCurrentWrittedBlock()
+	{
+		
+	}
 
 
 };

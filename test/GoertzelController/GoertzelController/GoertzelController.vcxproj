@@ -77,6 +77,7 @@
   <ItemGroup>
     <ClCompile Include="GoertzelConfiguration.cpp" />
     <ClCompile Include="GoertzelControllerTest.cpp" />
+    <ClCompile Include="GoertzelFilter.cpp" />
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="VersionEvent.cpp" />
@@ -84,8 +85,9 @@
   <ItemGroup>
     <ClInclude Include="Assert.h" />
     <ClInclude Include="GoertzelBlockBlockingQueue.h" />
-    <ClInclude Include="Goertzel.h" />
+    <ClInclude Include="GoertzelBase.h" />
     <ClInclude Include="GoertzelController.h" />
+    <ClInclude Include="GoertzelFilter.h" />
     <ClInclude Include="Interlocked.h" />
     <ClInclude Include="LowPassFilter.h" />
     <ClInclude Include="Event.h" />

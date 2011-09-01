@@ -16,4 +16,14 @@ public:
 		}
 	}
 
+	static void That(bool expr, char * onError)
+	{
+		if(!expr)
+		{
+			printf("ERROR expression isn't valid - %s\n",onError);
+
+			for(;;);
+		}
+	}
+
 };

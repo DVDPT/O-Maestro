@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "Assert.h"
-#include "Goertzel.h"
+#include "GoertzelBase.h"
 #include "GoertzelBlockBlockingQueue.h"
 #include "LowPassFilter.h"
 #include "Thread.h"
@@ -11,14 +11,14 @@
 
 
 
-typedef void (*GoertzelControllerCallback)(GoertzelResult * results,int nrOfResults);
+typedef void (*GoertzelControllerCallback)(GoertzelResultCollection * results);
 
 ///
 ///	The acceptable percentage between block and filtered power.
 ///		This value is important so that a call to Goertzel only occurs when
 ///		some of the block frequencies are present in the input signal
 ///
-#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (8)
+//#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (10)
 
 template <	
 	class SamplesBufferType,
@@ -30,6 +30,8 @@ template <
 >   
 class GoertzelController
 {
+	
+
 	///
 	///	The buffer to pass along to the BlockBlockingQueue
 	///
@@ -46,10 +48,15 @@ class GoertzelController
 	typename GoertzelBlockBlockingQueue<SamplesBufferType>::BlockManipulator _samplesWriter;
 
 	///
-	///	The place where Goertzel Filters will store their results
+	///	The place where Goertzel Filters will store their results.
+	///	Make room for two arrays to double buffer results.
 	///
-	GoertzelResult _resultsBuffer[NrOfFrequencies * 2];
-	GoertzelResult * _results;
+	GoertzelResultCollection _resultsBuffer[2];
+
+	GoertzelResultCollection * _results;
+
+	volatile int _currentResultsCounter;
+
 
 	///
 	///	The Goertzel Filters 
@@ -77,6 +84,8 @@ class GoertzelController
 	///	Frequencies Already Processed for this block
 	///
 	volatile int _processedBlocks;
+
+	
 
 	///
 	///	Goertzel Filters Event	
@@ -115,29 +124,6 @@ class GoertzelController
 		///
 		int BlockIndex;						
 	};
-
-
-	///
-	///	Returns a pointer where the results of Goertzel should be written
-	///
-	inline GoertzelResult *  GetFrequencyResult(int blockIndex, int frequencyIndex)
-	{
-		return &_results[(_frequenciesBlock[0].blockNrOfFrequencies * blockIndex) + frequencyIndex];
-	}
-
-	void InitializeGoertzelResults()
-	{
-		for(int block = 0; block < _nrOfFrequenciesBlocks; ++block)
-		{
-			for(int freq = 0; freq < _frequenciesBlock[block].blockNrOfFrequencies; ++freq)
-			{
-				GoertzelResult * result = GetFrequencyResult(block,freq);
-					
-					result->percentage = 0;
-				
-			}
-		}
-	}
 
 
 	///
@@ -184,8 +170,18 @@ class GoertzelController
 		///	A flag to test if the filter has halted the samples processing
 		BOOL haltFilter = FALSE;
 
+		///	A flag to know if a frequency from this block was found.
+		BOOL frequencyFounded = FALSE;
+
+		///	An auxiliary local variable to be used when the goertzel is called.
+		GoertzelResult auxResult;
+
+		///	Number of blocks needed to find a frequency for this filter.
+		const int numberOfBlocksNeededToFindFreqs =(block.blockFsDivFs * block.blockN / MaxNValue)+1;
+
 		///	The event version, to pass as argument to the wait method of VersionEvent
 		unsigned int eventVersion = gc._filtersEvent.GetCurrentVersion();
+
 
 		while(TRUE)
 		{
@@ -194,6 +190,7 @@ class GoertzelController
 			///
 			///	Wait until there are samples to process
 			///
+			
 			queue.AdquireReaderBlock(reader);
 			
 			///
@@ -231,25 +228,31 @@ class GoertzelController
 			float relationBetweenFilteredAndBlockPower = filteredSamplesPower * 100 / reader.GetBlockPower();
 
 
-			if(relationBetweenFilteredAndBlockPower >= ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER)
+			if(relationBetweenFilteredAndBlockPower >= GOERTZEL_FILTERED_SAMPLES_POWER_MINIMUM_PERCENTAGE_THRESHOLD)
 			{
 				///
 				///	We have all samples needed to process this block
 				///
-			
-			
 				if(filteredSamplesIdx == block.blockN)
 				{
-					printf("\nBlock %d entering goertzel, TotalPower: %f\n",blockIndex,reader.GetBlockPower());
 					for(int i = 0; i < block.blockNrOfFrequencies; ++i)
-						Goertzel<SamplesBufferType>::CalculateGoertzel(
+					{
+						frequencyFounded = Goertzel::CalculateGoertzel(
 																		filteredSamples,
 																		block.blockN,
 																		&block.frequencies[i],
-																		gc.GetFrequencyResult(blockIndex,i),
+																		&auxResult,
 																		goertzelSamplesPower
 																	  );
-
+							
+						if(frequencyFounded)
+						{
+							int resultIdx = Interlocked::Increment(&gc._currentResultsCounter);
+							GoertzelResult* res = &gc._results->results[resultIdx];
+							res->frequency = auxResult.frequency;
+							res->percentage = auxResult.percentage;
+						}
+					}
 					haltFilter = TRUE;
 				}
 				else
@@ -264,10 +267,9 @@ class GoertzelController
 			}
 			else
 			{
-				printf("\nBlock %d halting \t| \tPower:%f \t| Filtered Power:%f \t| PowerPercentage:%f\n",blockIndex,reader.GetBlockPower(),filteredSamplesPower,relationBetweenFilteredAndBlockPower);
 				haltFilter = TRUE;
 			}
-			queue.ReleaseReader(reader);
+			queue.ReleaseReader(reader,haltFilter);
 			
 			if(haltFilter)
 			{
@@ -278,19 +280,30 @@ class GoertzelController
 				haltFilter = FALSE;
 				filter.Reset();
 
-				///
-				///	Show that this filter has no more interest on samples
-				///
-				queue.DecrementNumberOfGetsToFreeBlock();
+				if(frequencyFounded)
+				{
+					do
+					{
+						int currNrOfBlocks = gc._results->blocksUsed;
+					
+						if(currNrOfBlocks >= numberOfBlocksNeededToFindFreqs 
+													|| 
+							Interlocked::CompareExchange((unsigned int*)&gc._results->blocksUsed,numberOfBlocksNeededToFindFreqs,currNrOfBlocks) == currNrOfBlocks)
+							break;
 
+					
+					}while(true);
+				}
+
+				frequencyFounded = FALSE;
 				///
 				///	If this is the last Filter going to sleep wake up Controller to hand over the results
 				///
-				Interlocked::Increment(&gc._processedBlocks);
-				if(gc._processedBlocks == (gc._nrOfFrequenciesBlocks))
+				if(Interlocked::Increment(&gc._processedBlocks) == (gc._nrOfFrequenciesBlocks))
 				{
 					gc._controllerEvent.Set();
 				}
+
 				///
 				///	Wait for the other filters
 				///
@@ -308,7 +321,7 @@ class GoertzelController
 		if(*state)
 		{
 
-			gc->_results = &(gc->_results[NrOfFrequencies]); 
+			gc->_results = &(gc->_resultsBuffer[1]); 
 			
 		}
 		else
@@ -344,24 +357,12 @@ class GoertzelController
 		///
 		BOOL resultsArrayPosition = TRUE;
 
-		///
-		///	Initialize GoertzelResults
-		///
+		gc->_results->nrOfResults = 0;
 
-		gc->InitializeGoertzelResults();
-
-		gc->SetFrequencyValuesOnResultBuffer();
-
-		ChangeGoertzelResultsBuffer(gc,&resultsArrayPosition);
-		
-		gc->SetFrequencyValuesOnResultBuffer();
-		
-		ChangeGoertzelResultsBuffer(gc,&resultsArrayPosition);
 		///
 		///	Reset processed Frequencies
 		///
 		gc->_processedBlocks = 0;
-
 
 		///
 		///	Initialize Goertzel Filters Threads
@@ -381,47 +382,55 @@ class GoertzelController
 			///
 			///	Store previous results to pass to the callback
 			///
-			GoertzelResult * currentResults = gc->_results;
+			GoertzelResultCollection * currentResults = gc->_results;
 			
 			///
-			///	Swap to the next results and Initialize 
+			///	Set how many results there is in this batch.
 			///
-			ChangeGoertzelResultsBuffer(gc,&resultsArrayPosition);
-			
-			gc->InitializeGoertzelResults();
+			currentResults->nrOfResults = gc->_currentResultsCounter + 1;
 
 			///
-			///	Reset processed Frequencies
+			///	Reset the results counter.
+			///
+			gc->_currentResultsCounter = -1;
+			
+			///
+			///	currentResults->blocksUsed is filled by the goertzel filters.
+			///
+			
+			///
+			///	Swap to the next results.
+			///
+			ChangeGoertzelResultsBuffer(gc,&resultsArrayPosition);
+			gc->_results->nrOfResults = gc->_results->blocksUsed = 0;
+
+			///
+			///	Reset processed blocks
 			///
 			gc->_processedBlocks = 0;
 
-			gc->_samplesQueue.SetNumberOfGetsToFreeBlock(gc->_nrOfFrequenciesBlocks);
+
+			gc->_samplesQueue.UnlockReaders(gc->_nrOfFrequenciesBlocks);
+
 			///
 			/// Notify Filters to fetch blocks
 			///
 			gc->_filtersEvent.Set();
 
+			
+
 			///
 			///	Run Callback
 			///
-			gc->_callback(currentResults,NrOfFrequencies);
+			if(currentResults->nrOfResults > 0)
+			{
+				gc->_callback(currentResults);
+			}
 			
 		}
 	}
 
-	void SetFrequencyValuesOnResultBuffer()
-	{
-		for(int block = 0; block < _nrOfFrequenciesBlocks; ++block)
-		{
-			for(int freq = 0; freq < _frequenciesBlock[block].blockNrOfFrequencies; ++freq)
-			{
-				GoertzelResult * result = GetFrequencyResult(block,freq);
-				result->frequency = _frequenciesBlock[block].frequencies[freq].frequency;
-
-
-			}
-		}
-	}
+	
 
 public:
 
@@ -435,7 +444,8 @@ public:
 		_controllerEvent(false,false),
 		_results(_resultsBuffer),
 		_callback(callback),
-		_samplesWriter(WRITE,_samplesQueue)
+		_samplesWriter(WRITE,_samplesQueue),
+		_currentResultsCounter(-1)
 
 	{
 		Assert::Equals(NrOfGoertzelFilters,_nrOfFrequenciesBlocks);

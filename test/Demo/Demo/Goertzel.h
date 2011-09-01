@@ -10,7 +10,8 @@
 #define GOERTZEL_FREQUENCY_MAX_N (180)
 #define GOERTZEL_QUEUE_MAX_BLOCKS (40*5)
 #define GOERTZEL_MAX_NR_OF_MULTIPLE_FREQUENCIES_SIMULTANEOUS (20)
-#define GOERTZEL_MINIMUM_PERCENTAGE_THRESHOLD (10)
+#define GOERTZEL_RELATIVE_POWER_MINIMUM_PERCENTAGE_THRESHOLD (10)
+#define GOERTZEL_FILTERED_SAMPLES_POWER_MINIMUM_PERCENTAGE_THRESHOLD (10)
 #define GOERTZEL_CONTROLLER_BUFFER_SIZE (((GOERTZEL_FREQUENCY_MAX_N + (sizeof(double)/sizeof(short))) * GOERTZEL_QUEUE_MAX_BLOCKS))
 #define GOERTZEL_CONTROLLER_FS (8800)
 #define GOERTZEL_CONTROLLER_SAMPLES_TYPE short
@@ -79,7 +80,7 @@ public:
 		double freqPower = CalculateFrequencyPower(CalculateRelativePower(Q1,Q2,freq->coefficient) , samplesSize);
 		result->percentage = freqPower * 100 / totalPower;
 		
-		if(result->percentage > GOERTZEL_MINIMUM_PERCENTAGE_THRESHOLD)
+		if(result->percentage > GOERTZEL_RELATIVE_POWER_MINIMUM_PERCENTAGE_THRESHOLD)
 		{
 			result->frequency = freq;
 			return true;
