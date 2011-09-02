@@ -37,11 +37,6 @@ class GoertzelFilter
 	GoertzelSampleType _filteredSamples[GOERTZEL_FREQUENCY_MAX_N];
 
 	///
-	///	The number of samples blocks needed by this filter do produce results.
-	///
-	unsigned int _numberOfBlocksNeededToFindFreqs;
-
-	///
 	///	When this filter needs to stop or to be reconfigurated, it uses
 	///	this event to wait sinalization.
 	///

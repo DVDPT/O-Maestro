@@ -1,16 +1,18 @@
-// GoertzelController.cpp : Defines the entry point for the console application.
-//
+﻿#include "GoertzelController.h"
 
-#include <Windows.h>
+///
+///	The Goertzel configuration.
+///
+extern GoertzelFrequeciesBlock* goertzelBlocks;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "GoertzelBlockBlockingQueue.h"
-#include "Thread.h"
-#include "GoertzelController.h"
+///
+///	The controller callbacks.
+///
+void ControllerResultCallback(GoertzelResultCollection& col);
 
-void GoertzelControllerTest();
-void main()
-{
-	GoertzelControllerTest();
-}
+void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed);
+
+///
+///	The goertzel controller instance.
+///
+GoertzelController goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerResultCallback,ControllerSilenceCallback);

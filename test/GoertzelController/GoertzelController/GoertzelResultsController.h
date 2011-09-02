@@ -2,6 +2,7 @@
 
 #include "GoertzelBase.h"
 #include "Interlocked.h"
+#include "GoertzelBlockBlockingQueue.h"
 
 ///
 ///	Class responsible to control all the results produced by the GoertzelFilters,
@@ -22,15 +23,15 @@ class GoertzelResultsController
 	GoertzelResultCollection * _results;
 
 	///
+	///	The reference to the goertzel queue.
+	///
+	GoertzelBlockBlockingQueue<GoertzelSampleType>& _queue;
+
+	///
 	///	The next position of the @_results to be filled with a result
 	///
 	volatile int _currentResultsCounter;
 
-	///
-	///	If needed this function updates the number of blocks that was used to produce results.
-	///
-	void UpdateNrBlocksUsed(int nrOfBlocksUsed);
-	
 	///
 	///	Swaps the buffer that should be used to store the results.
 	///
@@ -41,7 +42,7 @@ public:
 	///
 	///	
 	///
-	GoertzelResultsController();
+	GoertzelResultsController(GoertzelBlockBlockingQueue<GoertzelSampleType>& queue);
 
 	///
 	///	Returns the current results and swaps to the next buffer.
@@ -51,5 +52,5 @@ public:
 	///
 	///	Adds to the current buffer the @result.
 	///
-	void AddResult(GoertzelResult& result,int nrOfBlocksUsed);
+	void AddResult(GoertzelResult& result);
 };

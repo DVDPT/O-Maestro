@@ -1,7 +1,7 @@
 ﻿#include "GoertzelResultsController.h"
 
-GoertzelResultsController::GoertzelResultsController()
-	:	_results(_resultsBuffer), _currentResultsCounter(-1)
+GoertzelResultsController::GoertzelResultsController(GoertzelBlockBlockingQueue<GoertzelSampleType>& queue)
+	:	_results(_resultsBuffer), _currentResultsCounter(-1), _queue(queue)
 {
 
 }
@@ -17,15 +17,14 @@ void GoertzelResultsController::SwapBuffer()
 	 
 }
 
-void GoertzelResultsController::AddResult(GoertzelResult& result,int nrOfBlocksUsed)
+void GoertzelResultsController::AddResult(GoertzelResult& result)
 {
 	int index = Interlocked::Increment(&_currentResultsCounter);
 	GoertzelResult& res = _results->results[index];
 	res.frequency = result.frequency;
 	res.percentage = result.percentage;
 
-	if(_results->blocksUsed < nrOfBlocksUsed)
-		UpdateNrBlocksUsed(nrOfBlocksUsed);
+	
 
 }
 
@@ -33,22 +32,8 @@ GoertzelResultCollection& GoertzelResultsController::GetResults()
 {
 	GoertzelResultCollection& curr = *_results;
 	SwapBuffer();
-	curr.nrOfResults = _currentResultsCounter + 1; ///since the index starts un -1 to use the interlock funcion, the results counter needs to be updated.
+	curr.nrOfResults = _currentResultsCounter + 1; ///since the index starts in -1 to use the interlock funcion, the results counter needs to be updated.
+	curr.blocksUsed = _queue.GetAndResetNumberOfBlocksUsed();
 	_currentResultsCounter = -1;
 	return curr;
-}
-
-void GoertzelResultsController::UpdateNrBlocksUsed(int nrOfBlocks)
-{
-	do
-	{
-		int currNrOfBlocks = _results->blocksUsed;
-					
-		if(currNrOfBlocks >= nrOfBlocks 
-			|| Interlocked::CompareExchange((unsigned int*)&_results->blocksUsed,nrOfBlocks,currNrOfBlocks) == currNrOfBlocks
-	   	  )
-		break;
-
-					
-	}while(true);
 }

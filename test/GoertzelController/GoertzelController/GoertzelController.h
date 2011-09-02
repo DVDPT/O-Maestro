@@ -11,7 +11,8 @@
 #include "GoertzelFilter.h"
 #include "GoertzelResultsController.h"
 
-typedef void (*GoertzelControllerCallback)(GoertzelResultCollection& results);
+typedef void (*GoertzelResultsCallback)(GoertzelResultCollection& results);
+typedef void (*GoertzelSilenceCallback)(unsigned int numberOfBlocksProcessed);
 
 ///
 ///	The acceptable percentage between block and filtered power.
@@ -37,7 +38,7 @@ class GoertzelController
 	///
 	///	The Write manipulator for the samples.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator _samplesWriter;
+	GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator _samplesWritter;
 
 	///
 	///	An instance of the results controller, to manage the results.
@@ -62,12 +63,17 @@ class GoertzelController
 	///
 	///	The number of Blocks of frequencies
 	///
-	const int _nrOfFrequenciesBlocks;
+	volatile int _nrOfFrequenciesBlocks;
 
 	///
 	///	Frequencies Already Processed for this block
 	///
 	volatile int _processedBlocks;
+
+	///
+	///	The environment power checked by the controller.
+	///
+	GoertzelPowerType _environmentPower;
 
 	///
 	///	Goertzel Filters Event, so that the filters wait for the controller
@@ -88,9 +94,14 @@ class GoertzelController
 	volatile int _newConfigurationNrBlocks;
 
 	///
-	/// The controller callback, this method will be called when a sample is processed
+	/// The controller results callback, this method will be called when a there are results to show.
 	///	
-	const GoertzelControllerCallback _callback;
+	const GoertzelResultsCallback _resultsCallback;
+
+	///
+	/// The controller silence callback, this method will be called when no results exists to present.
+	///	
+	const GoertzelSilenceCallback _silenceCallback;
 
 	///
 	///	The controller routine to be ran in a separate thread.
@@ -101,7 +112,7 @@ class GoertzelController
 	///	This method is only used by the Goertzel Filters, its porpuse is to
 	///	block the filters until there is more samples to process.
 	///
-	void WaitFromNewBlocks(unsigned int * version);
+	void WaitForNewBlocks(unsigned int * version);
 
 	///
 	///	Returns the results controller.
@@ -120,11 +131,11 @@ class GoertzelController
 	void ConfigureFilters();
 
 
-	
+
 
 public:
 
-	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelControllerCallback callback);
+	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback);
 
 
 	///
@@ -149,8 +160,12 @@ public:
 	///
 	void ReconfigureFilters(GoertzelFrequeciesBlock * freqs, int nrOfBlocks);
 
-
-
-
+	///
+	///	Sets the environment power, when this value is set
+	///	the controller tests each block power with @envPower
+	///	if the block power is smaller than the @envPower 
+	///	that block is discarted.
+	///
+	void SetEnvironmentPower(GoertzelPowerType envPower) { _environmentPower = envPower; }
 
 };

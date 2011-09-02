@@ -12,7 +12,7 @@ enum TypeOfManipulation{READ, WRITE};
 ///	This queue purpose is to provide digital signal samples (by blocks) with a simple interface for Goertzel Filters.
 ///	This queue is responsible for calculating the overall signal power (by block).
 /// This queue is thread safe and is prepared to serve multiple Goertzel Filters, with the same blocks.
-///	NOTE:	The size of the buffer passed in the ctor should be multiple of sizeof(double) + blocksize
+///	NOTE:	The size of the buffer passed in the ctor should be multiple of sizeof(GOERTZEL_POWER_TYPE) + blocksize
 ///			this is needed so that the queue stores the power of the input signal.
 ///
 
@@ -134,9 +134,7 @@ public:
 private:
 	Monitor _monitor;
 
-	bool isCurrentWrittedBlockValid;
-
-	int _blockSize,  _bufSize;
+	int _blockSize,  _bufSize, _numberOfBlocksUsed;
 
 	volatile unsigned int _get, _put, _currNrOfGets, _nextPut, _currGetVersion,_maxNrOfGets;
 
@@ -166,13 +164,12 @@ public:
 		_put(0),
 		_nextPut(-1),
 		_get(0),
-		_blockSize((blockSize + (sizeof(double) / sizeof(T)))),		///Reserve space to save the block power
+		_blockSize((blockSize + (sizeof(GoertzelPowerType) / sizeof(T)))),		///Reserve space to save the block power
 		_buf(buffer),
 		_bufSize(bufferSize/sizeof(T)),
 		_maxNrOfGets(numberOfGetsToFree),
 		_currNrOfGets(numberOfGetsToFree),
-		_currGetVersion(1),
-		isCurrentWrittedBlockValid(true)
+		_currGetVersion(1)
 	{
 		
 	}
@@ -278,6 +275,11 @@ public:
 			///	increment version counter
 			///
 			_currGetVersion++;
+
+			///
+			///	increment the number of blocks used
+			///
+			_numberOfBlocksUsed++;
 		}
 	}
 
@@ -331,10 +333,19 @@ public:
 		Monitor::Exit(_monitor);
 	}
 
-	void DropCurrentWrittedBlock()
+	///
+	///	Resets the current number of blocks used, and returns the previous value.
+	///	this method isn't thread safe so it should be only called when the goertzel filters
+	///	are "sleeping".
+	///
+	int GetAndResetNumberOfBlocksUsed()
 	{
-		
+		int aux = _numberOfBlocksUsed;
+		_numberOfBlocksUsed = 0;
+		return aux;
+ 
 	}
+
 
 
 };

@@ -36,6 +36,7 @@ void GoertzelFilter::Stop()
 void GoertzelFilter::Configure(GoertzelFrequeciesBlock& newBlock)
 {
 	_block = &newBlock;
+	Stop();
 }
 
 bool GoertzelFilter::HaveNewConfiguration()
@@ -43,6 +44,10 @@ bool GoertzelFilter::HaveNewConfiguration()
 	return _needsConfiguration;
 }
 
+void GoertzelFilter::Restart()
+{
+	_configurationEvent.Set();
+}
 
 
 GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
@@ -108,11 +113,12 @@ void GoertzelFilter::AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesP
 		if(frequencyFounded)
 		{
 			_controller->GetResultsController().
-						 AddResult(auxResult,_numberOfBlocksNeededToFindFreqs);
+						 AddResult(auxResult);
 		}
 	}
 		
 }
+
 
 
 void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
@@ -166,11 +172,6 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 		///	Create the low pass filter needed for the signal filtering.
 		///
 		LowPassFilter<GoertzelSampleType> filter(block.filterValues);
-			
-		///
-		///	Number of sample blocks needed to find a frequency for this filters frequency block.
-		///
-		goertzelFilter._numberOfBlocksNeededToFindFreqs =(block.blockFsDivFs * block.blockN / GOERTZEL_FREQUENCY_MAX_N)+1;
 
 		///
 		///	This loop serves as dynamic memory so that when this filter
@@ -243,13 +244,20 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 				///
 				///	Report to the controller that this filter is going to halt processing, and wait for new blocks.
 				///
-				gc.WaitFromNewBlocks(&eventVersion);
+				gc.WaitForNewBlocks(&eventVersion);
 
 			}
 		
 		} while(!goertzelFilter.HaveNewConfiguration());
 
+		///
+		///	Wait until configuration is done.
+		///
 		goertzelFilter._configurationEvent.Wait();
+
+		///
+		///	Already configure reset flag.
+		///
 		goertzelFilter._needsConfiguration = false;
 	
 	} while(true);
