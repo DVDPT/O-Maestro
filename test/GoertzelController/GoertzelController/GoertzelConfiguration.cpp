@@ -2,7 +2,7 @@
 
 
 
-GoertzelFrequency const block0Freqs[] = 
+GoertzelFrequency block0Freqs[] = 
 {
 	{ 55, 1.61803398874989, "A(1)", "LA(1)" },
 	{ 58.2705, 1.57299322125469, "A#(1)", "LA#/SIb(1)" },
@@ -55,8 +55,8 @@ double const block0filterValues[] =
 	0.0041572566321963,
 	0.00306815464430648,
 };
-GoertzelFrequeciesBlock const block0 = { 550, 169, 16, 16,(double*)block0filterValues,(GoertzelFrequency*)block0Freqs };
-GoertzelFrequency const block1Freqs[] = 
+GoertzelFrequeciesBlock const block0 = { 550, 180, 16, 16,(double*)block0filterValues,(GoertzelFrequency*)block0Freqs };
+GoertzelFrequency block1Freqs[] = 
 {
 	{ 138.591, 1.40537309482184, "C#(3)", "DO#/REb(3)" },
 	{ 146.832, 1.33685699127416, "D(3)", "RE(3)" },
@@ -110,7 +110,7 @@ double const block1filterValues[] =
 	-0.0063266390493672,
 };
 GoertzelFrequeciesBlock const block1 = { 1100, 142, 8, 16,(double*)block1filterValues,(GoertzelFrequency*)block1Freqs };
-GoertzelFrequency const block2Freqs[] = 
+GoertzelFrequency block2Freqs[] = 
 {
 	{ 349.228, 1.08498864045419, "F(4)", "FA(4)" },
 	{ 369.994, 0.983495691286584, "F#(4)", "FA#/SOLb(4)" },
@@ -164,7 +164,7 @@ double const block2filterValues[] =
 	0.00244006824195502,
 };
 GoertzelFrequeciesBlock const block2 = { 2200, 113, 4, 16,(double*)block2filterValues,(GoertzelFrequency*)block2Freqs };
-GoertzelFrequency const block3Freqs[] = 
+GoertzelFrequency block3Freqs[] = 
 {
 	{ 880, 1.61803398874989, "A(5)", "LA(5)" },
 	{ 932.328, 1.57299322125469, "A#(5)", "LA#/SIb(5)" },
@@ -218,7 +218,7 @@ double const block3filterValues[] =
 	-0.000717375180680671,
 };
 GoertzelFrequeciesBlock const block3 = { 8800, 179, 1, 16,(double*)block3filterValues,(GoertzelFrequency*)block3Freqs };
-GoertzelFrequency const block4Freqs[] = 
+GoertzelFrequency block4Freqs[] = 
 {
 	{ 2217.46, -0.0249321758937832, "C#(7)", "DO#/REb(7)" },
 	{ 2349.32, -0.212824743993789, "D(7)", "RE(7)" },

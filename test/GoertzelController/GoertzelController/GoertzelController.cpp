@@ -159,7 +159,7 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 			gc->_resultsCallback(currentResults);
 		}
 		else
-			gc->_silenceCallback(currentResults.nrOfResults);
+			gc->_silenceCallback(currentResults.blocksUsed);
 			
 	}
 }

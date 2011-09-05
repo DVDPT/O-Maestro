@@ -54,8 +54,8 @@ GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
 															GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator reader, 
 															GoertzelPowerType* goertzelOverallPower,
 															LowPassFilter<GoertzelSampleType> filter,
-															unsigned int * overallIndex,
-															unsigned int * filteredSamplesIdx
+															volatile unsigned int * overallIndex,
+															volatile unsigned int * filteredSamplesIdx
 														  )
 {
 	GoertzelSampleType filteredSample, sample;
@@ -139,12 +139,12 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 	///
 	///	The index for the filteredSamples.
 	///
-	unsigned int filteredSamplesIdx = 0;
+	volatile unsigned int filteredSamplesIdx = 0;
 
 	///
 	///	An overall counter to know when to save a filtered sample.
 	///
-	unsigned int overallIndex = 0;
+	volatile unsigned int overallIndex = 0;
 
 	///
 	///	A flag to test if the filter has halted the samples processing.

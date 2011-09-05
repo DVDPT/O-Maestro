@@ -134,9 +134,9 @@ public:
 private:
 	Monitor _monitor;
 
-	int _blockSize,  _bufSize, _numberOfBlocksUsed;
+	int _blockSize,  _bufSize;
 
-	volatile unsigned int _get, _put, _currNrOfGets, _nextPut, _currGetVersion,_maxNrOfGets;
+	volatile unsigned int _get, _put, _currNrOfGets, _nextPut, _currGetVersion,_maxNrOfGets,_numberOfBlocksUsed;
 
 
 	T * _buf;
@@ -169,7 +169,8 @@ public:
 		_bufSize(bufferSize/sizeof(T)),
 		_maxNrOfGets(numberOfGetsToFree),
 		_currNrOfGets(numberOfGetsToFree),
-		_currGetVersion(1)
+		_currGetVersion(1),
+		_numberOfBlocksUsed(0)
 	{
 		
 	}
@@ -249,7 +250,7 @@ public:
 	void ReleaseReadersIfPossible() 
 	{
 		//Assert::That(_currNrOfGets == 0,"Release readers called but _currNrOfGets != 0");
-		if(_maxNrOfGets != 0 && _currNrOfGets == 0)
+		if(_currNrOfGets == 0)
 		{
 			///
 			///	wake putters and getters waiting 
@@ -326,7 +327,7 @@ public:
 		
 		SetNumberOfGetsToFreeBlock(nrOfReaders);
 
-		ReleaseReadersIfPossible();
+		//ReleaseReadersIfPossible();
 
 		_currNrOfGets =	nrOfReaders;
 		
