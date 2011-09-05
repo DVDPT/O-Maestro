@@ -80,6 +80,7 @@
     <ClCompile Include="GoertzelControllerTest.cpp" />
     <ClCompile Include="GoertzelFilter.cpp" />
     <ClCompile Include="GoertzelResultsController.cpp" />
+    <ClCompile Include="GoertzelTimeController.cpp" />
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="VersionEvent.cpp" />
@@ -91,7 +92,9 @@
     <ClInclude Include="GoertzelController.h" />
     <ClInclude Include="GoertzelFilter.h" />
     <ClInclude Include="GoertzelResultsController.h" />
+    <ClInclude Include="GoertzelTimeController.h" />
     <ClInclude Include="Interlocked.h" />
+    <ClInclude Include="List.h" />
     <ClInclude Include="LowPassFilter.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Monitor.h" />

@@ -1,4 +1,5 @@
-﻿#include "GoertzelController.h"
+﻿/*/
+#include "GoertzelController.h"
 
 ///
 ///	The Goertzel configuration.
@@ -16,3 +17,6 @@ void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed);
 ///	The goertzel controller instance.
 ///
 GoertzelController goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerResultCallback,ControllerSilenceCallback);
+//*/
+void GoertzelControllerTest();
+int main(){ GoertzelControllerTest(); return 0;}

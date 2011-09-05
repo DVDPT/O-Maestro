@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LowPassFilter.h"
-
+#include "List.h"
 
 
 
@@ -29,6 +29,10 @@ struct GoertzelFrequency
 	double coefficient;	///< the frequency pre-calculated coefficient.
 	char* englishNotation;
 	char* portugueseNotation;
+	unsigned int noteIndex;
+
+
+
 };
 
 
