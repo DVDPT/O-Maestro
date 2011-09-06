@@ -4,7 +4,7 @@
 
 #define FS (GOERTZEL_CONTROLLER_FS)
 #define NR_OF_BLOCKS_PER_RELATIVE_SECOND ((FS / GOERTZEL_FREQUENCY_MAX_N))
-#define NUMBER_OF_SECONDS_OF_INPUT_SIGNAL (2)
+#define NUMBER_OF_SECONDS_OF_INPUT_SIGNAL (60 * 60)
 
 #define NR_OF_SAMPLES ((FS + GOERTZEL_FREQUENCY_MAX_N) * NUMBER_OF_SECONDS_OF_INPUT_SIGNAL)
 #define AMPLITUDE (1000)
@@ -54,25 +54,34 @@ void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
 
 
 
-double frequencies[] = {440};
+double frequencies[] = {55,4186.01};
 
 
 
 short signal[NR_OF_SAMPLES];
-
+int aux = 0;
 void PresentationRoutine()
 {
 	do
 	{
 		
 		GoertzelNoteResultCollection& results = timeController.FetchResults();
+		
 		printf("------------------------------------ RESULTS(%d) ------------------------------------\n",results.nrOfResults);
+
+		
 		for(int i = 0; i < results.nrOfResults; ++i)
 		{
-			printf("The frequency %d has played %d milis\n",results.noteResults[i].frequency->frequency, (int)(((double)results.noteResults[i].nrOfBlocksUsed/NR_OF_BLOCKS_PER_RELATIVE_SECOND) * 1000));
+			unsigned int time = (int)(((double)results.noteResults[i].nrOfBlocksUsed/NR_OF_BLOCKS_PER_RELATIVE_SECOND) * 1000);
+			printf("The frequency %d has played %d milis\n",results.noteResults[i].frequency->frequency, time);
 		}
-
+		printf("-------------------------------------------------------------------------------------\n");
 		timeController.FreeFetchedResults();
+		if(aux++ == 10)
+		{
+			system("cls");
+			aux = 0;
+		}
 	}while(true);
 }
 
@@ -127,7 +136,9 @@ int main()
 	///
 	GenerateSinusoid(signal,NR_OF_SAMPLES-8800,GOERTZEL_CONTROLLER_FS,frequencies,sizeof(frequencies) / sizeof(double));
 
-	AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,55,5040,8800);
+	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,55,5919,8799);
+
+	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,(GOERTZEL_FREQUENCY_MAX_N * 2),(GOERTZEL_FREQUENCY_MAX_N * 3));
 
 	///
 	///	Send samples to the controller.
