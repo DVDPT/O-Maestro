@@ -201,7 +201,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 				///
 				///	Generate the relation between the filtered power and the actual block power.
 				///
-				GoertzelPowerType relationBetweenFilteredAndBlockPower = filteredSamplesPower * 100 / reader.GetBlockPower();
+				GoertzelPowerType relationBetweenFilteredAndBlockPower = (filteredSamplesPower * 100) / reader.GetBlockPower();
 
 				///
 				///	Check if the relation is is above the defined threshold.

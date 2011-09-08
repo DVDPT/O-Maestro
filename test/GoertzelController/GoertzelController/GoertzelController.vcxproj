@@ -82,6 +82,7 @@
     <ClCompile Include="GoertzelResultsController.cpp" />
     <ClCompile Include="GoertzelTimeController.cpp" />
     <ClCompile Include="Monitor.cpp" />
+    <ClCompile Include="PlayerRecorder.cpp" />
     <ClCompile Include="Program.cpp" />
     <ClCompile Include="VersionEvent.cpp" />
   </ItemGroup>
@@ -98,6 +99,7 @@
     <ClInclude Include="LowPassFilter.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Monitor.h" />
+    <ClInclude Include="PlayerRecorder.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VersionEvent.h" />

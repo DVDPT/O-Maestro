@@ -8,7 +8,7 @@
 ///	The number of notes that can be catched each second, the second is relative because it depends
 ///	on the defined time to a note.
 ///
-#define MAX_NUMBER_OF_NOTES_PER_RELATIVE_SECOND (32)
+#define MAX_NUMBER_OF_NOTES_PER_RELATIVE_SECOND (64)
 
 ///
 ///	Defines the number of relatives buffers that this instance can store,
@@ -19,7 +19,7 @@
 struct GoertzelNoteResult
 {
 	GoertzelFrequency * frequency;
-	unsigned int nrOfBlocksUsed;
+	volatile unsigned int nrOfBlocksUsed;
 	///
 	///	The fields startIndex and endIndex, are used to know when a note was played and when it stopped being played.
 	///

@@ -14,6 +14,8 @@
 typedef void (*GoertzelResultsCallback)(GoertzelResultCollection& results);
 typedef void (*GoertzelSilenceCallback)(unsigned int numberOfBlocksProcessed);
 
+#define GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE (5)
+
 ///
 ///	The acceptable percentage between block and filtered power.
 ///		This value is important so that a call to Goertzel only occurs when

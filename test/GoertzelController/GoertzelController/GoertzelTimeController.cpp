@@ -28,17 +28,25 @@ void GoertzelTimeController::AddResult(GoertzelResultCollection& results)
 
 	WaitUntilBufferIsAvailable();
 
+	bool freqProcessed = false;
 	
 
 	for(int i = 0; i < results.nrOfResults; ++i)
 	{
-		SaveFrequencyResultInBuffer(*results.results[i].frequency,results.blocksUsed);
+		if(results.results[i].percentage > APP_FREQUENCY_PRESENT_THRESHOLD)
+		{
+			freqProcessed = true;
+			SaveFrequencyResultInBuffer(*results.results[i].frequency,results.blocksUsed);
+		}
 	}
 
-	UpdateControllerStatus(results.blocksUsed);
+	if(freqProcessed)
+		UpdateControllerStatus(results.blocksUsed);
 
 	Monitor::Exit(_monitor);
 }
+
+
 
 void GoertzelTimeController::AddSilence(unsigned int nrOfBlocksUsed)
 {

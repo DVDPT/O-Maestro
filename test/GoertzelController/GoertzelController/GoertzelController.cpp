@@ -116,7 +116,7 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 	for(int i = 0; i < GOERTZEL_NR_OF_BLOCKS; ++i)
 		gc->_filters[i].Start(*gc,gc->_samplesQueue,gc->_frequenciesBlock[i]);
 
-
+	unsigned int currNumberOfSilenceBlocks = 0;
 
 	while(TRUE)
 	{
@@ -152,14 +152,28 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 		gc->_filtersEvent.Set();
 
 		///
+		///	Add the number of silence blocks to the number of blocks used
+		///	this value is between 0 and GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE,
+		///	and its used so that the frequency detection don't get a silecen between blocks.
+		///
+		currentResults.blocksUsed += currNumberOfSilenceBlocks;
+
+		///
 		///	Run Callback
 		///
 		if(currentResults.nrOfResults > 0)
 		{
 			gc->_resultsCallback(currentResults);
+			currNumberOfSilenceBlocks = 0;
 		}
-		else
+		else if(currNumberOfSilenceBlocks > GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE)
+		{
 			gc->_silenceCallback(currentResults.blocksUsed);
+			currNumberOfSilenceBlocks = 0;
+		}
+		
+		else
+			currNumberOfSilenceBlocks = currentResults.blocksUsed;
 			
 	}
 }
