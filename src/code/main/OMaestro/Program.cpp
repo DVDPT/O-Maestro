@@ -1,14 +1,19 @@
-﻿//
+//
 #include "GoertzelController.h"
 #include "GoertzelTimeController.h"
-#include "PlayerRecorder.h"
 #include <math.h>
-#include <conio.h>
+#include <System.h>
+#include <Clock.h>
+#include <Timer.h>
+
+
+
 
 ///
 ///	This define swaps code between the teorical test and the real test.
 ///
 #define TEORICAL_TEST
+
 
 
 
@@ -19,7 +24,7 @@
 
 
 #define AMPLITUDE (1000)
-#define PI (4*atan(1.0))  
+#define PI (4*atan(1.0))
 
 #define NR_OF_BLOCKS_PER_RELATIVE_SECOND ((FS / GOERTZEL_FREQUENCY_MAX_N) * RELATIVE_SECOND)
 
@@ -37,6 +42,13 @@
 
 #endif
 
+extern "C"
+{void *__dso_handle = NULL;}
+extern "C"
+{void *__aeabi_atexit (){}}
+
+
+Timer timer(LPC2xxx_TIMER1,60000);
 
 ///
 ///	The Goertzel configuration.
@@ -59,23 +71,24 @@ GoertzelController goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,Contr
 ///	The Time controller.
 ///
 GoertzelTimeController timeController;
-
+int nrResults = 0;
 void ControllerResultCallback(GoertzelResultCollection& col)
 {
-	//
+	/*/
 	for(int i = 0; i < col.nrOfResults; ++i)
 	{
-		printf("%d, [%d%%] |  ",col.results[i].frequency->frequency,col.results[i].percentage);
+		//printf("%d, [%d%%] |  ",col.results[i].frequency->frequency,col.results[i].percentage);
 	}
-	printf("--> %d \n",col.blocksUsed);
+	//printf("--> %d \n",col.blocksUsed);
 	//*/
+	//System::GetStandardOutput().Write("result\n\r");
 	timeController.AddResult(col);
 }
 
 int silenceCounter = 0;
 void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
 {
-		
+
 
 	timeController.AddSilence(numberOfBlocksProcessed);
 }
@@ -104,28 +117,45 @@ void PresentationRoutine()
 {
 	do
 	{
-		
+
 		GoertzelNoteResultCollection& results = timeController.FetchResults();
-		
+		timer.Disable();
+		counter = timer.GetTimerCount();
+		System::GetStandardOutput().Write("\n\rTotal Time: ");
+		System::GetStandardOutput().Write(counter);
+		System::GetStandardOutput().Write("\n\r");
+
 		if(!(results.nrOfResults == 1 && results.noteResults[0].frequency->frequency == 0))
 		{
-			printf("------------------------------------ RESULTS(%d) ------------------------------------\n",results.nrOfResults);
+			//printf("------------------------------------ RESULTS(%d) ------------------------------------\n",results.nrOfResults);
 
-		
+			System::GetStandardOutput().Write("Nr Results: ");
+			System::GetStandardOutput().Write(results.nrOfResults);
+			System::GetStandardOutput().Write("\n\r");
+
+
 			for(int i = 0; i < results.nrOfResults; ++i)
 			{
 				unsigned int time = (int)(((double)results.noteResults[i].nrOfBlocksUsed/NR_OF_BLOCKS_PER_RELATIVE_SECOND) * (1000 * RELATIVE_SECOND));
-				printf("The frequency %d - (%s|%s) has played %d milis: Started at block %d and ended at %d. Used %d blocks\n",results.noteResults[i].frequency->frequency, results.noteResults[i].frequency->englishNotation, results.noteResults[i].frequency->portugueseNotation,time,results.noteResults[i].startIndex,results.noteResults[i].endIndex,results.noteResults[i].nrOfBlocksUsed);
+				System::GetStandardOutput().Write("Freq-> ");
+				System::GetStandardOutput().Write(results.noteResults[i].frequency->frequency);
+				System::GetStandardOutput().Write(" Time: ");
+				System::GetStandardOutput().Write(time);
+				System::GetStandardOutput().Write("\n\r");
+				//printf("The frequency %d - (%s|%s) has played %d milis: Started at block %d and ended at %d. Used %d blocks\n",results.noteResults[i].frequency->frequency, results.noteResults[i].frequency->englishNotation, results.noteResults[i].frequency->portugueseNotation,time,results.noteResults[i].startIndex,results.noteResults[i].endIndex,results.noteResults[i].nrOfBlocksUsed);
 			}
-			printf("-------------------------------------------------------------------------------------\n");
+			//printf("-------------------------------------------------------------------------------------\n");
 		}
 		else
 		{
-			printf(".");
+			System::GetStandardOutput().Write(".");
 		}
-		timeController.FreeFetchedResults();counter++;
-			
-		
+		timeController.FreeFetchedResults();
+		System::GetStandardOutput().Write("Timer restarted\n\r");
+
+		timer.Enable();
+
+
 	}while(true);
 }
 
@@ -136,12 +166,12 @@ void PresentationRoutine()
 ///
 static void GenerateSinusoid(short * sinusoid, int size,int fs, double* fo, int sizeOfFo)
 {
-	int i = 0;
+	register int i = 0;
 	for(;i < size ; ++i)
 	{
 		sinusoid[i] = 0;
 		for(int j = 0; j < sizeOfFo; ++j)
-			sinusoid[i] += (((short)(AMPLITUDE * sin((2*PI*fo[j]*i) / (float)fs)))>>6) ;		
+			sinusoid[i] += (((short)(AMPLITUDE * sin((2*PI*fo[j]*i) / (float)fs)))>>6) ;
 	}
 }
 
@@ -159,9 +189,10 @@ static void AddToSinusoidFrequency(short * sinusoid, int size, int fs, double fo
 ///
 ///	Send samples to the GoertzelController.
 ///
+int nrOfRuns = 0;
 static void SendSamplesToController()
 {
-	for(int i = 0; i < NR_OF_SAMPLES; ++i)
+	for(register int i = 0; i < NR_OF_SAMPLES; ++i)
 	{
 		if(goertzelController.CanWriteSample())
 		{
@@ -172,12 +203,21 @@ static void SendSamplesToController()
 			goertzelController.WaitUntilWritingIsAvailable();
 			i--;
 		}
+		/*/
+		if(i == 8800)
+		{
+			//timer.Disable();
+			//System::GetStandardOutput().Write(timer.GetTimerCount());
+			//System::GetStandardOutput().Write("\n\r");
+		}//*/
 	}
+	System::GetStandardOutput().Write("FINISHED\n\r");
+	nrOfRuns++;
 }
 
 void ShiftSamples(short* signal,unsigned int size)
 {
-	for(int i = 0; i < size; ++i)
+	for(register int i = 0; i < size; ++i)
 	{
 		signal[i]>>=6;
 	}
@@ -189,7 +229,7 @@ void ShiftSamples(short* signal,unsigned int size)
 GoertzelPowerType GetPowerFrom(short* signal,unsigned int size)
 {
 	GoertzelPowerType power = 0;
-	for(int i = 0; i < size; ++i)
+	for(register int i = 0; i < size; ++i)
 	{
 		power += signal[i] * signal[i];
 	}
@@ -203,46 +243,23 @@ void SetEnvironmentPower()
 {
 	GoertzelPowerType envPower = 0;
 
-#ifdef TEORICAL_TEST
 
 	envPower = 1;
-#else
-	
-	printf("Analysing surrounding environment for %dsec",TIME_TO_EVALUATE_ENVIRONMENT_POWER);
-	unsigned long long allPower = 0;
 
-	for(int i = 0; i < TIME_TO_EVALUATE_ENVIRONMENT_POWER; ++i) 
-		PlayerRecorder::record(1,FS,signal);
-	
-	for(int i = 0; i < TIME_TO_EVALUATE_ENVIRONMENT_POWER; ++i)
-	{
-		if(PlayerRecorder::record(1,FS,signal))
-		{
-			ShiftSamples(signal,FS);
-			
-			allPower += GetPowerFrom(signal,FS);
-			
-			printf(".");
-		}
-		else
-			Assert::That(false,"ERROR in env evaluation");
-	}
-	//envPower = allPower / (TIME_TO_EVALUATE_ENVIRONMENT_POWER * 4);
-	envPower  = 1;
-#endif
 
-	printf("\nSetting Goertzel Environment Power to %u\n",envPower);
+	//printf("\nSetting Goertzel Environment Power to %u\n",envPower);
 	goertzelController.SetEnvironmentPower(envPower);
 }
 
-
+Task presentationThread((ThreadFunction)PresentationRoutine);
 int main()
 {
-	Thread presentationThread((ThreadFunction)PresentationRoutine);
+
 
 	///
 	///	Set the number of blocks to the controller releases the results to presentation.
 	///
+	System::GetStandardOutput().Write("set number of results\n\r");
 	timeController.SetNumberOfBlocksToFreeResults(NR_OF_BLOCKS_PER_RELATIVE_SECOND);
 
 	///
@@ -253,78 +270,51 @@ int main()
 	///
 	///	Initialize the time controller.
 	///
+	System::GetStandardOutput().Write("initializing time controller\n\r");
 	timeController.Initialize(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS);
-	int counter = 0;
-	printf("Running with %d samples\n",NR_OF_SAMPLES);
+	System::GetStandardOutput().Write("initialized time controller\n\r");
 
+	//printf("Running with %d samples\n",NR_OF_SAMPLES);
 
+	///
+	///	Starts the controller thread and the filters.
+	///
+	System::GetStandardOutput().Write("starting controller\n\r");
+	goertzelController.Start();
+	System::GetStandardOutput().Write("started controller\n\r");
 	///
 	///	Start the presentation thread.
 	///
 	presentationThread.Start(NULL);
-
-#ifdef TEORICAL_TEST
+	System::GetStandardOutput().Write("started ui\n\r");
 	///
 	///	Generate input signal.
 	///
 	GenerateSinusoid(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,frequencies,sizeof(frequencies) / sizeof(double));
 
-	for(int i = 0; i < NR_OF_SAMPLES; ++i)
-	{
-		if(signal[i] == 0)counter++;
-	}
 
 	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,55,5919,8799);
 
-	AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,(GOERTZEL_FREQUENCY_MAX_N * 2),(GOERTZEL_FREQUENCY_MAX_N * 3));
+	AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,0,(GOERTZEL_FREQUENCY_MAX_N * 24));
 
 	///
 	///	Send samples to the controller.
 	///
+	System::GetStandardOutput().Write("Timer started\n\r");
+	timer.Enable();
 	while(true)
+	{
 		SendSamplesToController();
+	}
 
-	Sleep(1000);
 
-	printf("\nMain Thread exiting.\n");
+	//printf("\nMain Thread exiting.\n");
 	///
 	///	Wait for termination
 	///
-	getchar();
-#else
-	do
-	{
-		
-		if(_kbhit())
-		{
-			char c = getchar();
-			if(c == 'c')
-				system("cls");
-		}
-		
-		///
-		///	Get from the card the input samples
-		///
-		if(PlayerRecorder::record(TIME_TO_CAPTURE_CARD_SOUND,FS,signal) )
-		{
-			///
-			///	Shift the samples.
-			///
-			ShiftSamples(signal,NR_OF_SAMPLES);
-			///
-			///	Send them to the goertzel.
-			///
-			//printf("%u\n",GetPowerFrom(signal,NR_OF_SAMPLES));
-			SendSamplesToController();
 
-		}
-		else
-		{
-			printf("Record error\n");
-		}
-	}while(true);
 
-#endif
-
+	Thread::GetCurrentThread().ParkThread();
 
 }
+

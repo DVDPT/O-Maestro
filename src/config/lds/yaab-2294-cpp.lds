@@ -89,6 +89,12 @@ SECTIONS
 		__bss_end__ = ABSOLUTE(.);
 	} > eram
 
+	.init_array ALIGN(4) : {
+		__ctors_init__ = ABSOLUTE(.);
+		*(.init_array);
+		__ctors_end__ = ABSOLUTE(.);
+	} > eram
+	
 	.stack ALIGN(4) : {
 		__stack_start__ = ABSOLUTE(.);
 		*(.stack);
@@ -96,11 +102,7 @@ SECTIONS
 		__stack_end__ = ABSOLUTE(.);
 	} > eram
 	
-	.init_array ALIGN(4) : {
-		__ctors_init__ = ABSOLUTE(.);
-		*(.init_array);
-		__ctors_end__ = ABSOLUTE(.);
-	} > eram
+
 
 	__stack_top__ = __stack_end__;
 

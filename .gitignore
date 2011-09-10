@@ -69,5 +69,34 @@ Release
 obj
 bin
 
+*src/.metadata
+*src/RemoteSystemsTempFiles
+*.settings
+*.crc
+*.dat
+*.exe
+*.version
+*.cache
+*.manifest
+*.pdb
+*.bin
+*.tlog
+*.opensdf
+*.log
+*.obj
+*.ilk
+*.idb
+*.sdf
+*.user
+*.filters
+*.ipch
+*.suo
+_ReSharper.Goertzel
+Debug
+Release
+obj
+bin
+*.gitignore
+*.metadata
 
 /test/GoertzelController/GoertzelController/GoertzelController.suo
