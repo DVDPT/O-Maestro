@@ -6,7 +6,7 @@ using System.Text;
 
 namespace GoertzelEvaluater
 {
-    public class GoertzelFrequency
+    public class GoertzelFrequency : IComparable<GoertzelFrequency>
     {
         public double Frequency;
         public double Coefficient;
@@ -14,6 +14,10 @@ namespace GoertzelEvaluater
         public double DiffFromLast = 0;
 
 
+        public int CompareTo(GoertzelFrequency other)
+        {
+            return Frequency.CompareTo(other.Frequency);
+        }
     }
 
     public class GoertzelFrequenciesBlock

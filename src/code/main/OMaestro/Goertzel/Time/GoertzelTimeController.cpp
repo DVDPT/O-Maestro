@@ -86,10 +86,10 @@ void GoertzelTimeController::FreeFetchedResults()
 		_currConsumerResult++;
 
 	if(_buffersAvailability == NUMBER_OF_BUFFERS)
-		Monitor::NotifyAll(_monitor);
-
-	if(_buffersAvailability == NUMBER_OF_BUFFERS)
+	{
 		*_currNrOfResults = 0;
+		Monitor::NotifyAll(_monitor);
+	}
 
 	_buffersAvailability--;
 
@@ -116,6 +116,7 @@ void GoertzelTimeController::WaitUntilBufferIsAvailable()
 	}
 }
 
+
 void GoertzelTimeController::WaitUntilResultsAreAvailable()
 {
 	
@@ -136,7 +137,6 @@ void GoertzelTimeController::ReleaseWaitingReadersAndSwapBuffer()
 	///	Wake the readers.
 	///
 	Monitor::NotifyAll(_monitor);
-
 	GoertzelNoteResultCollection& oldResults = (GoertzelNoteResultCollection&)*_currResult;
 
 	if(_currResult == _lastResultBuffer)
@@ -152,7 +152,7 @@ void GoertzelTimeController::ReleaseWaitingReadersAndSwapBuffer()
 
 	_buffersAvailability++;
 	
-	_currNrOfResults = (unsigned int*)&_currResult->nrOfResults;
+	_currNrOfResults = &_currResult->nrOfResults;
 	
 	_orderIndex =  _currNumberOfBlocksUsed = 0;
 
@@ -211,7 +211,7 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 #else
 
 #endif
-
+	bool resultMigrated = false;
 	for(int i = 0; i < oldResults.nrOfResults; ++i)
 	{
 		if(oldResults.noteResults[i].endIndex == lastOrderIndex)
@@ -229,14 +229,16 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 			///
 			///	Set order index to 1 because there is already results in the queue.
 			///
-			_orderIndex = 1;
+			resultMigrated = true;
 		}
 	}
+	if(resultMigrated)
+		_orderIndex = 1;
 	
 }
-
 GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFrequency& freq)
 {
+
 
 	if(freq.noteIndex == -1)
 	{
@@ -257,7 +259,7 @@ GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFreque
 		///
 		///	Increment the number of results.
 		///
-		(*_currNrOfResults)++;
+		*_currNrOfResults = *_currNrOfResults+1;
 
 		return currRes;
 	}

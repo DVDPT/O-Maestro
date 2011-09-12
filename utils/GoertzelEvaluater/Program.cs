@@ -11,7 +11,7 @@ namespace GoertzelEvaluater
         public const int FS = 8800;
         public const int MAX_N = 200;
         public const int MIN_N = 1;
-        public const int NR_OF_POINTS = 31;
+        public const int NR_OF_POINTS = 15;
         public const int FILTER_POINTS = NR_OF_POINTS + 2;
 
         static void Main(string[] args)

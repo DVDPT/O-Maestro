@@ -19,7 +19,7 @@
 
 #define FS (GOERTZEL_CONTROLLER_FS)
 #define RELATIVE_SECOND (1)
-#define NUMBER_OF_SECONDS_OF_INPUT_SIGNAL (2)
+#define NUMBER_OF_SECONDS_OF_INPUT_SIGNAL (1)
 
 
 
@@ -62,17 +62,24 @@ void ControllerResultCallback(GoertzelResultCollection& col);
 
 void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed);
 
+
+
+
 ///
 ///	The goertzel controller instance.
 ///
+#ifdef GOERTZEL_CONTROLLER_USER_DEFINED_BUFFER
+SECTION(".internalmem") GoertzelSampleType samplesbuffer[GOERTZEL_CONTROLLER_BUFFER_SIZE];
+GoertzelController goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerResultCallback,ControllerSilenceCallback,samplesbuffer,GOERTZEL_CONTROLLER_BUFFER_SIZE);
+#else
 GoertzelController goertzelController(goertzelBlocks,GOERTZEL_NR_OF_BLOCKS,ControllerResultCallback,ControllerSilenceCallback);
-
+#endif
 ///
 ///	The Time controller.
 ///
 GoertzelTimeController timeController;
 int nrResults = 0;
-void ControllerResultCallback(GoertzelResultCollection& col)
+SECTION(".internalmem") void ControllerResultCallback(GoertzelResultCollection& col)
 {
 	/*/
 	for(int i = 0; i < col.nrOfResults; ++i)
@@ -82,11 +89,12 @@ void ControllerResultCallback(GoertzelResultCollection& col)
 	//printf("--> %d \n",col.blocksUsed);
 	//*/
 	//System::GetStandardOutput().Write("result\n\r");
+
 	timeController.AddResult(col);
 }
 
 int silenceCounter = 0;
-void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
+SECTION(".internalmem") void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
 {
 
 
@@ -103,7 +111,7 @@ void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
 
 
 
-double frequencies[] = {0};
+double frequencies[] = {4186.01,440,55};
 
 
 
@@ -113,7 +121,7 @@ int counter = 0;
 ///
 ///	The UI thread routine, this is responsible to show the time of the notes catched by the controller.
 ///
-void PresentationRoutine()
+SECTION(".internalmem") void PresentationRoutine()
 {
 	do
 	{
@@ -125,8 +133,6 @@ void PresentationRoutine()
 		System::GetStandardOutput().Write(counter);
 		System::GetStandardOutput().Write("\n\r");
 
-		if(!(results.nrOfResults == 1 && results.noteResults[0].frequency->frequency == 0))
-		{
 			//printf("------------------------------------ RESULTS(%d) ------------------------------------\n",results.nrOfResults);
 
 			System::GetStandardOutput().Write("Nr Results: ");
@@ -141,15 +147,16 @@ void PresentationRoutine()
 				System::GetStandardOutput().Write(results.noteResults[i].frequency->frequency);
 				System::GetStandardOutput().Write(" Time: ");
 				System::GetStandardOutput().Write(time);
+				System::GetStandardOutput().Write(" start: ");
+				System::GetStandardOutput().Write(results.noteResults[i].startIndex);
+				System::GetStandardOutput().Write(" end: ");
+				System::GetStandardOutput().Write(results.noteResults[i].endIndex);
 				System::GetStandardOutput().Write("\n\r");
 				//printf("The frequency %d - (%s|%s) has played %d milis: Started at block %d and ended at %d. Used %d blocks\n",results.noteResults[i].frequency->frequency, results.noteResults[i].frequency->englishNotation, results.noteResults[i].frequency->portugueseNotation,time,results.noteResults[i].startIndex,results.noteResults[i].endIndex,results.noteResults[i].nrOfBlocksUsed);
 			}
 			//printf("-------------------------------------------------------------------------------------\n");
-		}
-		else
-		{
-			System::GetStandardOutput().Write(".");
-		}
+
+
 		timeController.FreeFetchedResults();
 		System::GetStandardOutput().Write("Timer restarted\n\r");
 
@@ -190,7 +197,7 @@ static void AddToSinusoidFrequency(short * sinusoid, int size, int fs, double fo
 ///	Send samples to the GoertzelController.
 ///
 int nrOfRuns = 0;
-static void SendSamplesToController()
+SECTION(".internalmem") static void SendSamplesToController()
 {
 	for(register int i = 0; i < NR_OF_SAMPLES; ++i)
 	{
@@ -211,7 +218,6 @@ static void SendSamplesToController()
 			//System::GetStandardOutput().Write("\n\r");
 		}//*/
 	}
-	System::GetStandardOutput().Write("FINISHED\n\r");
 	nrOfRuns++;
 }
 
@@ -295,7 +301,7 @@ int main()
 
 	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,55,5919,8799);
 
-	AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,0,(GOERTZEL_FREQUENCY_MAX_N * 24));
+	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,0,(GOERTZEL_FREQUENCY_MAX_N * 24));
 
 	///
 	///	Send samples to the controller.

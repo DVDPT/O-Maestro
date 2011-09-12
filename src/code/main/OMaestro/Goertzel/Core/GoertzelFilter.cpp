@@ -3,7 +3,7 @@
 #include "GoertzelFilter.h"
 
 
-GoertzelFilter::GoertzelFilter(GoertzelController& controller,GoertzelBlockBlockingQueue<GOERTZEL_CONTROLLER_SAMPLES_TYPE>& queue,GoertzelFrequeciesBlock& block)
+GoertzelFilter::GoertzelFilter(GoertzelController& controller,GoertzelBlockBlockingQueue& queue,GoertzelFrequeciesBlock& block)
 	:	_controller(&controller), _queue(&queue),_block(&block),_configurationEvent(false,false),_needsConfiguration(false)
 {
 	
@@ -19,7 +19,7 @@ void GoertzelFilter::Start()
 	_filterThread.Start((ThreadFunction)&GoertzelFilterRoutine, (ThreadArgument)this);
 }
 
-void GoertzelFilter::Start(GoertzelController& controller,GoertzelBlockBlockingQueue<GOERTZEL_CONTROLLER_SAMPLES_TYPE>& queue,GoertzelFrequeciesBlock& block)
+void GoertzelFilter::Start(GoertzelController& controller,GoertzelBlockBlockingQueue& queue,GoertzelFrequeciesBlock& block)
 {
 	_controller = &controller;
 	_queue = &queue;
@@ -51,9 +51,9 @@ void GoertzelFilter::Restart()
 
 
 GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
-															GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator& reader,
+															GoertzelBlockBlockingQueue::BlockManipulator& reader,
 															GoertzelPowerType* goertzelOverallPower,
-															LowPassFilter<GoertzelSampleType>& filter,
+															LowPassFilter& filter,
 															volatile unsigned int * overallIndex,
 															volatile unsigned int * filteredSamplesIdx
 														  )
@@ -134,7 +134,7 @@ void GoertzelFilter::AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesP
 }
 
 
-void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
+SECTION(".internalmem") void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 {
 	GoertzelFilter& goertzelFilter = *filterP;
 	GoertzelController& gc = *goertzelFilter._controller;
@@ -172,7 +172,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 	///
 	///	Allocate the queue reader.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator reader(READ,*goertzelFilter._queue);
+	GoertzelBlockBlockingQueue::BlockManipulator reader(READ,*goertzelFilter._queue);
 	
 	do
 	{
@@ -184,7 +184,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 		///
 		///	Create the low pass filter needed for the signal filtering.
 		///
-		LowPassFilter<GoertzelSampleType> filter(block.filterValues);
+		LowPassFilter filter(block.filterValues);
 
 		///
 		///	This loop serves as dynamic memory so that when this filter

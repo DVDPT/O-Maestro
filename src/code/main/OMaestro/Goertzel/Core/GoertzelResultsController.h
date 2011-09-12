@@ -25,7 +25,7 @@ class GoertzelResultsController
 	///
 	///	The reference to the goertzel queue.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>& _queue;
+	GoertzelBlockBlockingQueue& _queue;
 
 	///
 	///	The next position of the @_results to be filled with a result
@@ -35,22 +35,22 @@ class GoertzelResultsController
 	///
 	///	Swaps the buffer that should be used to store the results.
 	///
-	void SwapBuffer();
+	SECTION(".internalmem") void SwapBuffer();
 
 public:
 
 	///
 	///	
 	///
-	GoertzelResultsController(GoertzelBlockBlockingQueue<GoertzelSampleType>& queue);
+	SECTION(".internalmem") GoertzelResultsController(GoertzelBlockBlockingQueue& queue);
 
 	///
 	///	Returns the current results and swaps to the next buffer.
 	///
-	GoertzelResultCollection& GetResults();
+    GoertzelResultCollection& GetResults();
 
 	///
 	///	Adds to the current buffer the @result.
 	///
-	void AddResult(GoertzelResult& result);
+	SECTION(".internalmem") void AddResult(GoertzelResult& result);
 };

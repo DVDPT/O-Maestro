@@ -5,7 +5,7 @@ GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numb
 	: 
 	_samplesQueue(_samplesbuffer,GOERTZEL_CONTROLLER_BUFFER_SIZE,GOERTZEL_FREQUENCY_MAX_N,numberOfBlocks),
 	_frequenciesBlock(freqs),
-	_processedBlocks(GOERTZEL_NR_OF_FREQUENCIES),
+	_processedBlocks(0),
 	_nrOfFrequenciesBlocks(numberOfBlocks),
 	_filtersEvent(false),
 	_controllerEvent(false,false),

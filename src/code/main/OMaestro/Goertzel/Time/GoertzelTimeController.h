@@ -67,7 +67,7 @@ class GoertzelTimeController
 	///
 	///	How many results are presente in @_currResult.
 	///
-	unsigned int * _currNrOfResults;
+	volatile unsigned int * _currNrOfResults;
 
 	///
 	///	This counter serves to know each notes were played at the same time.
@@ -131,7 +131,7 @@ class GoertzelTimeController
 	///
 	///	Migrate results that passed the number of blocks need to present them.
 	///
-	void MigrateResults(GoertzelNoteResultCollection& oldResults, GoertzelNoteResultCollection& newResults, unsigned int blocksUsed,unsigned int lastOrderIndex);
+	SECTION(".internalmem")void MigrateResults(GoertzelNoteResultCollection& oldResults, GoertzelNoteResultCollection& newResults, unsigned int blocksUsed,unsigned int lastOrderIndex);
 
 	///
 	///	Returns from the current results buffer the result associated with the @freq.
@@ -140,7 +140,7 @@ class GoertzelTimeController
 	///	orderIndex and the order in the frequency, this method returns the previous, 
 	///	else allocate a new one
 	///
-	GoertzelNoteResult& FetchCurrentResultFor(GoertzelFrequency& freq);
+	SECTION(".internalmem") GoertzelNoteResult& FetchCurrentResultFor(GoertzelFrequency& freq);
 
 public:
 
@@ -157,23 +157,23 @@ public:
 	///	Stores in the buffer the @results, if the nrOfBlocksUsed + _currNumberOfBlocksUsed >= _nrOfBlocksToFreeResults it frees
 	///	the current results to be consumed.
 	///
-	void AddResult(GoertzelResultCollection& results);
+	SECTION(".internalmem") void AddResult(GoertzelResultCollection& results);
 
 	///
 	///	The same that @AddResult but without storing new results.
 	///
-	void AddSilence(unsigned int nrOfBlocksUsed);
+	SECTION(".internalmem") void AddSilence(unsigned int nrOfBlocksUsed);
 
 	///
 	///	Returns the current results, if no results are available this method blocks.
 	///	
 	///
-	GoertzelNoteResultCollection& FetchResults();
+	 GoertzelNoteResultCollection& FetchResults();
 
 	///
 	///	Free the fetch results, this way its possible to write new results in the buffer/list returned previously.
 	///
-	void FreeFetchedResults();
+	 void FreeFetchedResults();
 
 	///
 	///	Sets the number of blocks needed to free the results.

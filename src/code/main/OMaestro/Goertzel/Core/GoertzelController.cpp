@@ -1,6 +1,6 @@
 #include "GoertzelController.h"
 
-
+#ifndef GOERTZEL_CONTROLLER_USER_DEFINED_BUFFER
 GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback) 
 	: 
 	_samplesQueue(_samplesbuffer,GOERTZEL_CONTROLLER_BUFFER_SIZE,GOERTZEL_FREQUENCY_MAX_N,numberOfBlocks),
@@ -17,11 +17,27 @@ GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numb
 
 {
 	Assert::Equals(GOERTZEL_NR_OF_BLOCKS,_nrOfFrequenciesBlocks);
-
-
-
 		
 }
+#else
+
+GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback, GoertzelSampleType* buffer, int bufferSize)
+:
+	_samplesQueue(buffer,bufferSize,GOERTZEL_FREQUENCY_MAX_N,numberOfBlocks),
+	_frequenciesBlock(freqs),
+	_processedBlocks(0),
+	_nrOfFrequenciesBlocks(numberOfBlocks),
+	_filtersEvent(false),
+	_controllerEvent(false,false),
+	_resultsCallback(resultsCallback),
+	_silenceCallback(silenceCallback),
+	_samplesWritter(WRITE,_samplesQueue),
+	_environmentPower(0),
+	_results(_samplesQueue)
+{
+
+}
+#endif
 void GoertzelController::Start()
 {
 	///
@@ -93,7 +109,7 @@ void GoertzelController::ConfigureFilters()
 
 
 
-void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
+SECTION(".internalmem") void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 {
 
 

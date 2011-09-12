@@ -209,6 +209,7 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 
 	Assert::That(blockDifference > 0, "The difference of the blocks used to migrate results should be bigger than zero");
 
+	bool resultMigrated = false;
 	for(int i = 0; i < oldResults.nrOfResults; ++i)
 	{
 		if(oldResults.noteResults[i].endIndex == lastOrderIndex)
@@ -226,9 +227,11 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 			///
 			///	Set order index to 1 because there is already results in the queue.
 			///
-			_orderIndex = 1;
+			resultMigrated = true;
 		}
 	}
+	if(resultMigrated)
+		_orderIndex = 1;
 	
 }
 
@@ -264,7 +267,7 @@ GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFreque
 	///	If this note was added on the last set of results, return the previous result.
 	///	This means that the note played continuously over time.
 	///	
-	if(auxRes.endIndex == (_orderIndex-1))
+	if(auxRes.endIndex >= (_orderIndex-1))
 		return auxRes;
 
 	///

@@ -14,7 +14,7 @@ public:
 
 	}
 
-	void Wait()
+	SECTION(".internalmem") void Wait()
 	{
 		_block.Lock();
 		if(_currState)
@@ -30,7 +30,7 @@ public:
 
 	}
 
-	void Set()
+	SECTION(".internalmem") void Set()
 	{
 
 		if(_currState)

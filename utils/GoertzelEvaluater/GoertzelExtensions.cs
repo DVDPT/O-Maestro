@@ -52,7 +52,7 @@ namespace GoertzelEvaluater
             foreach (var freq in freqs)
             {
                
-                writer.WriteLine("GoertzelFrequency const block{0}Freqs[] = \n{{", block);
+                writer.WriteLine("SECTION(\".internalmem\") GoertzelFrequency block{0}Freqs[] = \n{{", block);
                 foreach (var goertzelFrequency in freq.Frequencies)
                 {
                     notations.MoveNext();
@@ -67,14 +67,14 @@ namespace GoertzelEvaluater
                 }
                 writer.WriteLine("};");
 
-                writer.WriteLine("double const block{0}filterValues[] = \n{{",block);
+                writer.WriteLine("SECTION(\".internalmem\") double block{0}filterValues[] = \n{{", block);
                 foreach (var filterValue in freq.FilterValues)
                 {
                     writer.WriteLine("\t{0},",filterValue.ToString().Replace(",","."));    
                 }
                 writer.WriteLine("};");
 
-                writer.WriteLine("GoertzelFrequeciesBlock const block{0} = {{ {1}, {2}, {3}, {4},(double*)block{0}filterValues,(GoertzelFrequency*)block{0}Freqs }};",
+                writer.WriteLine("SECTION(\".internalmem\") GoertzelFrequeciesBlock block{0} = {{ {1}, {2}, {3}, {4},(double*)block{0}filterValues,(GoertzelFrequency*)block{0}Freqs }};",
                                     block,
                                     freq.Fs,
                                     freq.N,
@@ -86,7 +86,7 @@ namespace GoertzelEvaluater
                 writer.Flush();
             }
 
-            writer.WriteLine("GoertzelFrequeciesBlock const blocks[] = {");
+            writer.WriteLine("SECTION(\".internalmem\") GoertzelFrequeciesBlock blocks[] = {");
 
             for (int i = 0; i < block; ++i)
             {
@@ -108,6 +108,7 @@ namespace GoertzelEvaluater
 
         private static void FillBlockFilter(GoertzelFrequenciesBlock block)
         {
+            
             var realSmallerFrequency = block.Frequencies.Min().Frequency ;
             var realBiggestFrequency = block.Frequencies.Max().Frequency ;
             

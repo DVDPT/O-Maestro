@@ -48,12 +48,20 @@ SECTIONS
 		__startup_end__ = ABSOLUTE(.);
 	} > ram
 
+
 	.targetconfig : {
 	__targetconfig__ = ABSOLUTE(.);
-	*(.targetconfig*);
-	
+	*(.targetconfig*);	
 	. = ALIGN(4);
 	__targetconfig__ = ABSOLUTE(.);
+	} > ram
+	
+	.internalmem : {
+		__internalmem_start__ = ABSOLUTE(.);
+		*(.internalmem*);
+		
+		. = ALIGN(4);
+		__internalmem_end__ = ABSOLUTE(.);
 	} > ram
 	
 	.text  : {

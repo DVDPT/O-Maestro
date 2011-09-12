@@ -40,24 +40,28 @@ struct GoertzelControllerBurstWritter
 
 };
 
+
+
 class GoertzelController
 {
 	
 	friend class GoertzelFilter;
+#ifndef GOERTZEL_CONTROLLER_USED_DEFINED_BUFFER
 	///
 	///	The buffer to pass along to the BlockBlockingQueue
 	///
 	GoertzelSampleType _samplesbuffer[GOERTZEL_CONTROLLER_BUFFER_SIZE];
+#endif
 
 	///
 	///	The Queue where the Goertzel Filters will get their samples
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType> _samplesQueue;
+	GoertzelBlockBlockingQueue _samplesQueue;
 
 	///
 	///	The Write manipulator for the samples.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator _samplesWritter;
+	GoertzelBlockBlockingQueue::BlockManipulator _samplesWritter;
 
 	///
 	///	An instance of the results controller, to manage the results.
@@ -131,7 +135,7 @@ class GoertzelController
 	///
 	///	The controller routine to be ran in a separate thread.
 	///
-	static void GoertzelControllerRoutine(GoertzelController * gc);
+	SECTION(".internalmem") static void GoertzelControllerRoutine(GoertzelController * gc);
 
 	///
 	///	This method is only used by the Goertzel Filters, its porpuse is to
@@ -160,14 +164,17 @@ class GoertzelController
 
 public:
 
-	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback);
-
+#ifndef GOERTZEL_CONTROLLER_USER_DEFINED_BUFFER
+	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback );
+#else
+	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback,GoertzelSampleType* buffer, int bufferSize);
+#endif
 
 	///
 	///	Single mode method.
 	///		Returns true when is possible to write a sample, false when is required to wait to write a sample.
 	///
-	bool CanWriteSample();
+	 bool CanWriteSample();
 
 	///
 	///	Single/Burst mode method.
@@ -178,7 +185,7 @@ public:
 	///
 	///	Single mode method.
 	///		Writes a sample in the buffer.
-	void WriteSample(GoertzelSampleType * sample);
+	 void WriteSample(GoertzelSampleType * sample);
 
 	///
 	///	Reconfigures the filters.

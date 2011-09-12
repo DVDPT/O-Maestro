@@ -1,6 +1,6 @@
 ﻿#include "GoertzelResultsController.h"
 
-GoertzelResultsController::GoertzelResultsController(GoertzelBlockBlockingQueue<GoertzelSampleType>& queue)
+GoertzelResultsController::GoertzelResultsController(GoertzelBlockBlockingQueue& queue)
 	:	_results(_resultsBuffer), _currentResultsCounter(-1), _queue(queue)
 {
 

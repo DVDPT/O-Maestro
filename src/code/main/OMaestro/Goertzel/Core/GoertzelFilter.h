@@ -3,7 +3,7 @@
 
 #include "GoertzelBase.h"
 #include "Event.h"
-
+#include "LowPassFilter.h"
 #ifdef _WIN32
 
 #include "Thread.h"
@@ -33,7 +33,7 @@ class GoertzelFilter
 	///
 	///	The reference to the Goertzel queue.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>* _queue;
+	GoertzelBlockBlockingQueue* _queue;
 
 
 	///
@@ -72,17 +72,17 @@ class GoertzelFilter
 	///	Filters the samples present in the @reader, and accumulates the power in goertzelOverallPower.
 	///	Returns the filteredPower.
 	///
-	GoertzelPowerType FilterAndCalculatePower(GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator& reader, GoertzelPowerType* goertzelOverallPower, LowPassFilter<GoertzelSampleType>& filter, volatile unsigned int * overallIndex, volatile unsigned int * filteredSamplesIdx);
+	SECTION(".internalmem") GoertzelPowerType FilterAndCalculatePower(GoertzelBlockBlockingQueue::BlockManipulator& reader, GoertzelPowerType* goertzelOverallPower, LowPassFilter& filter, volatile unsigned int * overallIndex, volatile unsigned int * filteredSamplesIdx);
 
 	///
 	///	Call Goertzel with all the frequencies of the this filter block and produce results.
 	///
-	void AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesPower);
+	SECTION(".internalmem") void AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesPower);
 
 	///
 	///	This goertzel filter routine.
 	///
-	static void GoertzelFilterRoutine(GoertzelFilter* filter);
+	SECTION(".internalmem") static void GoertzelFilterRoutine(GoertzelFilter* filter);
 
 	
 
@@ -95,7 +95,7 @@ public:
 	///
 	GoertzelFilter();
 
-	GoertzelFilter(GoertzelController& controller,GoertzelBlockBlockingQueue<GOERTZEL_CONTROLLER_SAMPLES_TYPE>& queue,GoertzelFrequeciesBlock& block);
+	GoertzelFilter(GoertzelController& controller,GoertzelBlockBlockingQueue& queue,GoertzelFrequeciesBlock& block);
 
 
 
@@ -104,7 +104,7 @@ public:
 	///
 	void Start();
 
-	void Start(GoertzelController& controller,GoertzelBlockBlockingQueue<GOERTZEL_CONTROLLER_SAMPLES_TYPE>& queue,GoertzelFrequeciesBlock& block);
+	void Start(GoertzelController& controller,GoertzelBlockBlockingQueue& queue,GoertzelFrequeciesBlock& block);
 
 	///
 	///	Stops the filter as soon as possible from processing.		
