@@ -120,7 +120,6 @@ namespace GoertzelEvaluater
 
             var realBandwidth = realBiggestFrequency - realSmallerFrequency;
 
-            var bandwidthGain = realBandwidth*10/100;
 
             //var smallerFrequency = realSmallerFrequency + bandwidthGain;
             //var biggestFrequency = realBiggestFrequency - bandwidthGain;
@@ -138,6 +137,10 @@ namespace GoertzelEvaluater
             //Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
             GetFilterValues(smallerFrequencyW0, biggestFrequencyW0, block.FilterValues);
 
+            ///
+            /// normalização do ganho
+            ///
+            /*/
             var maxValue = GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS);
             
             List<double> d = new List<double>();
@@ -148,7 +151,7 @@ namespace GoertzelEvaluater
             }
 
             block.FilterValues = d;
-
+            //*/
             //Console.WriteLine(GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS));
 
 
@@ -201,7 +204,7 @@ namespace GoertzelEvaluater
         {
             for (int i = -(Program.FILTER_POINTS / 2) + 1; i < Program.FILTER_POINTS / 2; ++i)
             {
-                var hi = (LowPassFilter(w1, i) - LowPassFilter(w0, i)) * Hamming(i, Program.NR_OF_POINTS);
+                var hi = (LowPassFilter(w1, i) - LowPassFilter(w0, i)) *  Hamming(i, Program.NR_OF_POINTS);
               
                 filter.Add(hi);
             }

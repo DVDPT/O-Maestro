@@ -1,3 +1,4 @@
+//
 #include "GoertzelBase.h"
 
 
@@ -196,3 +197,4 @@ SECTION(".internalmem") GoertzelFrequeciesBlock blocks[] = {
 	 block4 ,
 };
 GoertzelFrequeciesBlock* goertzelBlocks = (GoertzelFrequeciesBlock*)blocks;
+//*/

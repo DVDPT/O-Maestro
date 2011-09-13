@@ -31,7 +31,7 @@
 #ifdef TEORICAL_TEST
 
 #define NR_OF_SAMPLES ((FS) * NUMBER_OF_SECONDS_OF_INPUT_SIGNAL)
-
+#define NR_OF_RUNS (48)
 
 #else
 
@@ -81,15 +81,19 @@ GoertzelTimeController timeController;
 int nrResults = 0;
 SECTION(".internalmem") void ControllerResultCallback(GoertzelResultCollection& col)
 {
-	/*/
-	for(int i = 0; i < col.nrOfResults; ++i)
-	{
-		//printf("%d, [%d%%] |  ",col.results[i].frequency->frequency,col.results[i].percentage);
-	}
-	//printf("--> %d \n",col.blocksUsed);
-	//*/
-	//System::GetStandardOutput().Write("result\n\r");
 
+	if(++nrResults == NR_OF_RUNS)
+	{
+		timer.Disable();
+		System::GetStandardOutput().Write("\n\rN: ");
+		System::GetStandardOutput().Write(NR_OF_SAMPLES);
+		System::GetStandardOutput().Write("\n\rTotal Time: ");
+		System::GetStandardOutput().Write(timer.GetTimerCount());
+		System::GetStandardOutput().Write("\n\rRelative Time: ");
+		System::GetStandardOutput().Write(timer.GetTimerCount() / NR_OF_RUNS);
+		nrResults = 0;
+		timer.Enable();
+	}
 	timeController.AddResult(col);
 }
 
@@ -98,7 +102,7 @@ SECTION(".internalmem") void ControllerSilenceCallback(unsigned int numberOfBloc
 {
 
 
-	timeController.AddSilence(numberOfBlocksProcessed);
+	//timeController.AddSilence(numberOfBlocksProcessed);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////	APP		////////////////////////////////////////////////////////////
@@ -111,7 +115,7 @@ SECTION(".internalmem") void ControllerSilenceCallback(unsigned int numberOfBloc
 
 
 
-double frequencies[] = {4186.01,440,55};
+double frequencies[] = {4186.01};
 
 
 
@@ -210,13 +214,8 @@ SECTION(".internalmem") static void SendSamplesToController()
 			goertzelController.WaitUntilWritingIsAvailable();
 			i--;
 		}
-		/*/
-		if(i == 8800)
-		{
-			//timer.Disable();
-			//System::GetStandardOutput().Write(timer.GetTimerCount());
-			//System::GetStandardOutput().Write("\n\r");
-		}//*/
+
+
 	}
 	nrOfRuns++;
 }
@@ -324,3 +323,4 @@ int main()
 
 }
 
+//*/
