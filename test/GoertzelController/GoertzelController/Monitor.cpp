@@ -1,5 +1,6 @@
 #include "Monitor.h"
 #include <stdio.h>
+
 Monitor::Monitor()
 {
 	InitializeConditionVariable(&_condVar);

@@ -72,15 +72,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="GoertzelBase.cpp" />
+    <ClCompile Include="GoertzelBlockBlockingQueue.cpp" />
     <ClCompile Include="GoertzelConfiguration.cpp" />
     <ClCompile Include="GoertzelController.cpp" />
     <ClCompile Include="GoertzelControllerTest.cpp" />
     <ClCompile Include="GoertzelFilter.cpp" />
     <ClCompile Include="GoertzelResultsController.cpp" />
     <ClCompile Include="GoertzelTimeController.cpp" />
+    <ClCompile Include="LowPassFilter.cpp" />
     <ClCompile Include="Monitor.cpp" />
     <ClCompile Include="PlayerRecorder.cpp" />
     <ClCompile Include="Program.cpp" />

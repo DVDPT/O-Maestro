@@ -90,7 +90,7 @@ void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
 
 
 
-double frequencies[] = {440,55,4186.01};
+double frequencies[] = {4186.01};
 
 
 
@@ -161,6 +161,7 @@ static void AddToSinusoidFrequency(short * sinusoid, int size, int fs, double fo
 ///
 static void SendSamplesToController()
 {
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 	for(int i = 0; i < NR_OF_SAMPLES; ++i)
 	{
 		if(goertzelController.CanWriteSample())
@@ -173,6 +174,22 @@ static void SendSamplesToController()
 			i--;
 		}
 	}
+#else
+	GoertzelBurstWritter& writter = goertzelController.GetWritter();
+	int fails = 0;
+	for(int i = 0; i < NR_OF_SAMPLES; ++i)
+	{
+		if(!writter.TryWrite(signal[i]))
+		{
+			fails++;
+			Sleep(1);
+		}
+		//Sleep(1);
+
+	}
+
+	printf("ENDED - Fails: %d Success: %d\n",fails,NR_OF_SAMPLES - fails);
+#endif
 }
 
 void ShiftSamples(short* signal,unsigned int size)
@@ -257,6 +274,7 @@ int main()
 	int counter = 0;
 	printf("Running with %d samples\n",NR_OF_SAMPLES);
 
+	goertzelController.Start();
 
 	///
 	///	Start the presentation thread.
@@ -276,7 +294,7 @@ int main()
 
 	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,55,5919,8799);
 
-	AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,(GOERTZEL_FREQUENCY_MAX_N * 2),(GOERTZEL_FREQUENCY_MAX_N * 3));
+	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,4186.01,(GOERTZEL_FREQUENCY_MAX_N * 2),(GOERTZEL_FREQUENCY_MAX_N * 3));
 
 	///
 	///	Send samples to the controller.

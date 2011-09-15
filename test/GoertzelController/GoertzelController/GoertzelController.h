@@ -1,20 +1,32 @@
 #pragma once 
 
-#include "Assert.h"
 #include "GoertzelBase.h"
 #include "GoertzelBlockBlockingQueue.h"
 #include "LowPassFilter.h"
-#include "Thread.h"
-#include "Interlocked.h"
-#include "Event.h"
 #include "VersionEvent.h"
 #include "GoertzelFilter.h"
 #include "GoertzelResultsController.h"
+#include "Event.h"
+
+#ifdef _WIN32
+
+#include "Assert.h"
+#include "Thread.h"
+#include "Interlocked.h"
+
+
+#elif __MOS__
+
+#include <Threading.h>
+
+#endif
 
 typedef void (*GoertzelResultsCallback)(GoertzelResultCollection& results);
 typedef void (*GoertzelSilenceCallback)(unsigned int numberOfBlocksProcessed);
 
 #define GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE (5)
+
+
 
 ///
 ///	The acceptable percentage between block and filtered power.
@@ -23,25 +35,39 @@ typedef void (*GoertzelSilenceCallback)(unsigned int numberOfBlocksProcessed);
 ///
 //#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (10)
 
+
+
 class GoertzelController
 {
 	
 	friend class GoertzelFilter;
+#ifndef GOERTZEL_CONTROLLER_USED_DEFINED_BUFFER
 	///
 	///	The buffer to pass along to the BlockBlockingQueue
 	///
 	GoertzelSampleType _samplesbuffer[GOERTZEL_CONTROLLER_BUFFER_SIZE];
+#endif
 
 	///
 	///	The Queue where the Goertzel Filters will get their samples
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType> _samplesQueue;
+	GoertzelBlockBlockingQueue _samplesQueue;
 
 	///
 	///	The Write manipulator for the samples.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator _samplesWritter;
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 
+	GoertzelBlockBlockingQueue::BlockManipulator _samplesWritter;
+#else
+	GoertzelBurstWritter _samplesWritter;
+
+	///
+	///	A local variable to know when the filters are waiting for the controller to unlock them.
+	///
+	volatile bool _filtersWaiting;
+
+#endif
 	///
 	///	An instance of the results controller, to manage the results.
 	///
@@ -50,7 +76,13 @@ class GoertzelController
 	///
 	///	The Goertzel Controller thread. 
 	///
+#ifdef _WIN32
 	Thread _goertzelControllerThread;
+#elif __MOS__
+	Task _goertzelControllerThread;
+#endif
+
+
 
 	///
 	///	The Goertzel Filters.
@@ -65,12 +97,12 @@ class GoertzelController
 	///
 	///	The number of Blocks of frequencies
 	///
-	volatile int _nrOfFrequenciesBlocks;
+	volatile unsigned int _nrOfFrequenciesBlocks;
 
 	///
 	///	Frequencies Already Processed for this block
 	///
-	volatile int _processedBlocks;
+	volatile unsigned int _processedBlocks;
 
 	///
 	///	The environment power checked by the controller.
@@ -83,11 +115,12 @@ class GoertzelController
 	///
 	VersionEvent _filtersEvent;
 
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 	///
 	///	Controller Event, to wait for results
 	///
 	Event _controllerEvent;
-
+#endif
 	///
 	///	This fields serve to pass the configuration to the filters
 	///	this configuration is only done by the GoertzelController thread.
@@ -137,14 +170,18 @@ class GoertzelController
 
 public:
 
-	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback);
+#ifndef GOERTZEL_CONTROLLER_USER_DEFINED_BUFFER
+	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback );
+#else
+	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback,GoertzelSampleType* buffer, int bufferSize);
+#endif
 
-
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 	///
 	///	Single mode method.
 	///		Returns true when is possible to write a sample, false when is required to wait to write a sample.
 	///
-	BOOL CanWriteSample();
+	bool CanWriteSample();
 
 	///
 	///	Single/Burst mode method.
@@ -155,7 +192,14 @@ public:
 	///
 	///	Single mode method.
 	///		Writes a sample in the buffer.
-	void WriteSample(GoertzelSampleType * sample);
+	 void WriteSample(GoertzelSampleType * sample);
+
+#else
+	///
+	///	Returns the controller burst writter.
+	///
+	GoertzelBurstWritter& GetWritter(){ return _samplesWritter; }
+#endif
 
 	///
 	///	Reconfigures the filters.
@@ -169,5 +213,10 @@ public:
 	///	that block is discarted.
 	///
 	void SetEnvironmentPower(GoertzelPowerType envPower) { _environmentPower = envPower; }
+
+	///
+	///	Starts the controller thread and the filters.
+	///
+	void Start();
 
 };

@@ -25,7 +25,7 @@ class GoertzelResultsController
 	///
 	///	The reference to the goertzel queue.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>& _queue;
+	GoertzelBlockBlockingQueue& _queue;
 
 	///
 	///	The next position of the @_results to be filled with a result
@@ -42,12 +42,12 @@ public:
 	///
 	///	
 	///
-	GoertzelResultsController(GoertzelBlockBlockingQueue<GoertzelSampleType>& queue);
+	GoertzelResultsController(GoertzelBlockBlockingQueue& queue);
 
 	///
 	///	Returns the current results and swaps to the next buffer.
 	///
-	GoertzelResultCollection& GetResults();
+    GoertzelResultCollection& GetResults();
 
 	///
 	///	Adds to the current buffer the @result.

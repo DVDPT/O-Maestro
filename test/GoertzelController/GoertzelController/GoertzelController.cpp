@@ -1,6 +1,6 @@
 #include "GoertzelController.h"
 
-
+#ifndef GOERTZEL_CONTROLLER_USER_DEFINED_BUFFER
 GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback) 
 	: 
 	_samplesQueue(_samplesbuffer,GOERTZEL_CONTROLLER_BUFFER_SIZE,GOERTZEL_FREQUENCY_MAX_N,numberOfBlocks),
@@ -8,26 +8,60 @@ GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numb
 	_processedBlocks(0),
 	_nrOfFrequenciesBlocks(numberOfBlocks),
 	_filtersEvent(false),
-	_controllerEvent(false,false),
 	_resultsCallback(resultsCallback),
 	_silenceCallback(silenceCallback),
-	_samplesWritter(WRITE,_samplesQueue),
 	_environmentPower(0),
-	_results(_samplesQueue)
+	_results(_samplesQueue),
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE 
+	_samplesWritter(WRITE,_samplesQueue),
+	_controllerEvent(false,false)
+#else
+	_samplesWritter(_samplesbuffer,GOERTZEL_CONTROLLER_BUFFER_SIZE),
+	_filtersWaiting(false)
+#endif
+
 
 {
 	Assert::Equals(GOERTZEL_NR_OF_BLOCKS,_nrOfFrequenciesBlocks);
+		
+}
+#else
 
+GoertzelController::GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback, GoertzelSampleType* buffer, int bufferSize)
+:
+	_samplesQueue(buffer,bufferSize,GOERTZEL_FREQUENCY_MAX_N,numberOfBlocks),
+	_frequenciesBlock(freqs),
+	_processedBlocks(0),
+	_nrOfFrequenciesBlocks(numberOfBlocks),
+	_filtersEvent(false),
+	_controllerEvent(false,false),
+	_resultsCallback(resultsCallback),
+	_silenceCallback(silenceCallback),
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE 
+	_samplesWritter(WRITE,_samplesQueue),
+#else
+	_samplesWritter(GOERTZEL_FREQUENCY_MAX_N,bufferSize),
+#endif
+	_environmentPower(0),
+	_results(_samplesQueue)
+{
 
+}
+#endif
+void GoertzelController::Start()
+{
+#ifdef GOERTZEL_CONTROLLER_BURST_MODE
+	_samplesQueue.InitializeBurstWritter(_samplesWritter);
+#endif
 	///
 	///	Initialize Goertzel Controller Thread
 	///
 	_goertzelControllerThread.Start((ThreadFunction)&GoertzelController::GoertzelControllerRoutine,this);
-		
 }
 
 
-BOOL GoertzelController::CanWriteSample()
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
+bool GoertzelController::CanWriteSample()
 {
 	return _samplesWritter.CanWrite();
 }
@@ -52,13 +86,34 @@ void GoertzelController::WriteSample(GoertzelSampleType * sample)
 	}
 }
 
+#endif
 
 void GoertzelController::WaitForNewBlocks(unsigned int * version)
 {
-	if(Interlocked::Increment(&_processedBlocks) == (_nrOfFrequenciesBlocks))
+
+#ifdef _WIN32
+	if(Interlocked::Increment((volatile int*)&_processedBlocks) == (_nrOfFrequenciesBlocks))
 	{
+	#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 		_controllerEvent.Set();
+	#else
+		_filtersWaiting = true;
+	#endif
 	}
+#elif __MOS__
+	if(Interlocked::Increment((U32*)&_processedBlocks) == (_nrOfFrequenciesBlocks))
+	{
+	#ifndef GOERTZEL_CONTROLLER_BURST_MODE
+		_controllerEvent.Set();
+	#else
+		_filtersWaiting = true;
+	#endif
+	}
+
+	
+#else
+
+#endif
 
 	_filtersEvent.Wait(version);
 }
@@ -87,28 +142,16 @@ void GoertzelController::ConfigureFilters()
 	_newConfigurationNrBlocks = 0;
 }
 
-	
+
 
 void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 {
-	
-	///
-	///	The position of the array of results
-	///		- TRUE the first (add to get to the second)
-	///		- FALSE the second(subtract to get to the first)
-	///
-	BOOL resultsArrayPosition = TRUE;
 
 
 	///
 	///	Reset processed Frequencies
 	///
 	gc->_processedBlocks = 0;
-
-	///
-	/// Initialize Writer so its ready to read.
-	///
-	gc->WaitUntilWritingIsAvailable();
 
 	///
 	///	Initialize Goertzel Filters Threads
@@ -118,13 +161,47 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 
 	unsigned int currNumberOfSilenceBlocks = 0;
 
-	while(TRUE)
+	do
 	{
+
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 		///
 		///	Wait until a block got processed
 		///
 		gc->_controllerEvent.Wait();
+#else
+
+		do
+		{
 			
+			if(gc->_samplesWritter.HaveWritedBlock())
+			{
+				unsigned int nrOfBlocksWritted = gc->_samplesWritter.GetAndResetNrOfBlocks();
+				GoertzelQueueBlock* block = gc->_samplesQueue.GetPutPointer();
+				
+				while(nrOfBlocksWritted--)
+				{
+					if(block->Power < gc->_environmentPower)
+					{
+						block->Power = 0;
+					}
+					block = gc->_samplesQueue.IncrementPutPointerAndGetIt();
+				}
+			}
+			
+			if(gc->_filtersWaiting)
+				break;
+
+ #ifdef _WIN32
+			SwitchToThread();
+ #elif __MOS__
+			Thread::Yield();
+ #endif
+		}while(true);
+
+		gc->_filtersWaiting = false;
+#endif
+
 		///
 		///	Store previous results to pass to the callback
 		///
@@ -171,9 +248,8 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 			gc->_silenceCallback(currentResults.blocksUsed);
 			currNumberOfSilenceBlocks = 0;
 		}
-		
 		else
 			currNumberOfSilenceBlocks = currentResults.blocksUsed;
 			
-	}
+	}while(true);
 }

@@ -3,14 +3,14 @@
 #include "GoertzelFilter.h"
 
 
-GoertzelFilter::GoertzelFilter(GoertzelController& controller,GoertzelBlockBlockingQueue<GOERTZEL_CONTROLLER_SAMPLES_TYPE>& queue,GoertzelFrequeciesBlock& block)
-	:	_controller(&controller), _queue(&queue),_block(&block),_configurationEvent(FALSE,FALSE),_needsConfiguration(false)
+GoertzelFilter::GoertzelFilter(GoertzelController& controller,GoertzelBlockBlockingQueue& queue,GoertzelFrequeciesBlock& block)
+	:	_controller(&controller), _queue(&queue),_block(&block),_configurationEvent(false,false),_needsConfiguration(false)
 {
 	
 }
 
 GoertzelFilter::GoertzelFilter()
-	: _controller(NULL), _queue(NULL),_block(NULL),_configurationEvent(FALSE,FALSE),_needsConfiguration(false)
+	: _controller(NULL), _queue(NULL),_block(NULL),_configurationEvent(false,false),_needsConfiguration(false)
 {
 }
 
@@ -19,7 +19,7 @@ void GoertzelFilter::Start()
 	_filterThread.Start((ThreadFunction)&GoertzelFilterRoutine, (ThreadArgument)this);
 }
 
-void GoertzelFilter::Start(GoertzelController& controller,GoertzelBlockBlockingQueue<GOERTZEL_CONTROLLER_SAMPLES_TYPE>& queue,GoertzelFrequeciesBlock& block)
+void GoertzelFilter::Start(GoertzelController& controller,GoertzelBlockBlockingQueue& queue,GoertzelFrequeciesBlock& block)
 {
 	_controller = &controller;
 	_queue = &queue;
@@ -51,15 +51,22 @@ void GoertzelFilter::Restart()
 
 
 GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
-															GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator reader, 
+															GoertzelBlockBlockingQueue::BlockManipulator& reader,
 															GoertzelPowerType* goertzelOverallPower,
-															LowPassFilter<GoertzelSampleType> filter,
+															LowPassFilter& filter,
 															volatile unsigned int * overallIndex,
 															volatile unsigned int * filteredSamplesIdx
 														  )
 {
 	GoertzelSampleType filteredSample, sample;
 	GoertzelPowerType filteredSamplesPower = 0;
+
+	///
+	///	Set the indexes on the stack for better performance.
+	///
+	register unsigned int localOverallIndex = *overallIndex;
+	register unsigned int localFilteredSamplesIdx = *filteredSamplesIdx;
+	register GoertzelPowerType localGoertzelOverallPower = *goertzelOverallPower;
 	
 	///
 	///	Loop all the new samples to:
@@ -68,7 +75,7 @@ GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
 	///		-	Store the needed filtered samples in the local array for further use
 	///		-	Calculate the power of the needed samples to pass as argument to goertzel
 	///
-	for(; reader.TryRead(&sample); ++*overallIndex)
+	for(; reader.TryRead(&sample); ++localOverallIndex)
 	{
 		///
 		///	Filter the sample
@@ -83,14 +90,21 @@ GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
 		///
 		///	If we gonna need this sample store it on the local array and accumulate its power
 		///
-		if(*overallIndex % _block->blockFsDivFs == 0 && *filteredSamplesIdx < _block->blockN)
+		if(localOverallIndex % _block->blockFsDivFs == 0 && localFilteredSamplesIdx < _block->blockN)
 		{
 					
-			_filteredSamples[(*filteredSamplesIdx)++] = filteredSample;
+			_filteredSamples[(localFilteredSamplesIdx)++] = filteredSample;
 
-			*goertzelOverallPower += filteredSample * filteredSample;
+			localGoertzelOverallPower += filteredSample * filteredSample;
 		}
 	}
+
+	///
+	///	Preserve the local variables on the global context.
+	///
+	*overallIndex = localOverallIndex;
+	*filteredSamplesIdx = localFilteredSamplesIdx;
+	*goertzelOverallPower = localGoertzelOverallPower;
 
 	return filteredSamplesPower;
 }
@@ -100,7 +114,7 @@ void GoertzelFilter::AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesP
 	GoertzelResult auxResult;
 	bool frequencyFounded;
 
-	for(int i = 0; i < _block->blockNrOfFrequencies; ++i)
+	for(register int i = 0; i < _block->blockNrOfFrequencies; ++i)
 	{
 		frequencyFounded = Goertzel::CalculateGoertzel(
 														_filteredSamples,
@@ -112,13 +126,13 @@ void GoertzelFilter::AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesP
 							
 		if(frequencyFounded)
 		{
+			
 			_controller->GetResultsController().
 						 AddResult(auxResult);
 		}
 	}
 		
 }
-
 
 
 void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
@@ -159,7 +173,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 	///
 	///	Allocate the queue reader.
 	///
-	GoertzelBlockBlockingQueue<GoertzelSampleType>::BlockManipulator reader(READ,*goertzelFilter._queue);
+	GoertzelBlockBlockingQueue::BlockManipulator reader(READ,*goertzelFilter._queue);
 	
 	do
 	{
@@ -171,7 +185,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 		///
 		///	Create the low pass filter needed for the signal filtering.
 		///
-		LowPassFilter<GoertzelSampleType> filter(block.filterValues);
+		LowPassFilter filter(block.filterValues);
 
 		///
 		///	This loop serves as dynamic memory so that when this filter
@@ -186,13 +200,13 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 			///	Wait until there are samples to process
 			///	
 			goertzelFilter._queue->AdquireReaderBlock(reader);
-			
+
 			///
 			///	Check if the block is valid, if not discard all previous processing.
 			///
 			if(reader.IsBlockValid())
 			{
-
+								
 				///
 				///	Filter the samples and calculate this block power.
 				///
@@ -214,7 +228,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 					if(filteredSamplesIdx == block.blockN)
 					{
 						goertzelFilter.AnalyzeBlocksFrequencies(goertzelSamplesPower);
-						haltFilter = TRUE;
+						haltFilter = true;
 					}
 					///
 					///	We need more samples to be able to process this block, wait for more.
@@ -222,12 +236,12 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 				}
 				else
 				{
-					haltFilter = TRUE;
+					haltFilter = true;
 				}
 			}
 			else
 			{
-				haltFilter = TRUE;
+				haltFilter = true;
 			}
 
 			goertzelFilter._queue->ReleaseReader(reader,haltFilter);
@@ -238,8 +252,9 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 				///	There are no frequencies for this block in this samples reset this filter and wait for all other filters to end
 				///
 				goertzelSamplesPower = overallIndex = filteredSamplesIdx = 0;
-				haltFilter = FALSE;
+				haltFilter = false;
 				filter.Reset();
+
 
 				///
 				///	Report to the controller that this filter is going to halt processing, and wait for new blocks.
@@ -247,7 +262,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 				gc.WaitForNewBlocks(&eventVersion);
 
 			}
-		
+
 		} while(!goertzelFilter.HaveNewConfiguration());
 
 		///
