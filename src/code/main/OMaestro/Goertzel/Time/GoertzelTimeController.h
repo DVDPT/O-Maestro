@@ -2,8 +2,16 @@
 
 #include "GoertzelBase.h"
 #include "Monitor.h"
+
+#ifdef _WIN32
+
 #include "Assert.h"
 
+#elif __MOS__
+
+#include <Debug.h>
+
+#endif
 ///
 ///	The number of notes that can be catched each second, the second is relative because it depends
 ///	on the defined time to a note.
@@ -52,12 +60,12 @@ class GoertzelTimeController
 	///
 	///	The current result being used.
 	///
-	volatile GoertzelNoteResultCollection * _currResult;
+	GoertzelNoteResultCollection * _currResult;
 
 	///
 	///	The position to the consumer result, this points to the results that are currently being read.
 	///
-	volatile GoertzelNoteResultCollection * _currConsumerResult;
+	GoertzelNoteResultCollection * _currConsumerResult;
 
 	///
 	///	The number of blocks used to produce the resulst present in @_currResult.
@@ -67,12 +75,12 @@ class GoertzelTimeController
 	///
 	///	How many results are presente in @_currResult.
 	///
-	volatile unsigned int * _currNrOfResults;
+	unsigned int * _currNrOfResults;
 
 	///
 	///	This counter serves to know each notes were played at the same time.
 	///
-	volatile unsigned int _orderIndex;
+	unsigned int _orderIndex;
 
 	///
 	///	The monitor used to the critical sections, and to block thread when results are not available or
@@ -90,7 +98,7 @@ class GoertzelTimeController
 	///		when this oounter have the NUMBER_OF_BUFFERS value there is no more room to store
 	///		results and thread that are trying to set results must wait.
 	///
-	volatile int _buffersAvailability;
+	int _buffersAvailability;
 
 	///
 	///	Returns true if the buffers aren't all being used. false otherwise.
@@ -131,7 +139,7 @@ class GoertzelTimeController
 	///
 	///	Migrate results that passed the number of blocks need to present them.
 	///
-	SECTION(".internalmem")void MigrateResults(GoertzelNoteResultCollection& oldResults, GoertzelNoteResultCollection& newResults, unsigned int blocksUsed,unsigned int lastOrderIndex);
+	void MigrateResults(GoertzelNoteResultCollection& oldResults, GoertzelNoteResultCollection& newResults, unsigned int blocksUsed,unsigned int lastOrderIndex);
 
 	///
 	///	Returns from the current results buffer the result associated with the @freq.
@@ -140,7 +148,7 @@ class GoertzelTimeController
 	///	orderIndex and the order in the frequency, this method returns the previous, 
 	///	else allocate a new one
 	///
-	SECTION(".internalmem") GoertzelNoteResult& FetchCurrentResultFor(GoertzelFrequency& freq);
+	GoertzelNoteResult& FetchCurrentResultFor(GoertzelFrequency& freq);
 
 public:
 
@@ -157,23 +165,23 @@ public:
 	///	Stores in the buffer the @results, if the nrOfBlocksUsed + _currNumberOfBlocksUsed >= _nrOfBlocksToFreeResults it frees
 	///	the current results to be consumed.
 	///
-	SECTION(".internalmem") void AddResult(GoertzelResultCollection& results);
+	void AddResult(GoertzelResultCollection& results);
 
 	///
 	///	The same that @AddResult but without storing new results.
 	///
-	SECTION(".internalmem") void AddSilence(unsigned int nrOfBlocksUsed);
+	void AddSilence(unsigned int nrOfBlocksUsed);
 
 	///
 	///	Returns the current results, if no results are available this method blocks.
 	///	
 	///
-	 GoertzelNoteResultCollection& FetchResults();
+	GoertzelNoteResultCollection& FetchResults();
 
 	///
 	///	Free the fetch results, this way its possible to write new results in the buffer/list returned previously.
 	///
-	 void FreeFetchedResults();
+	void FreeFetchedResults();
 
 	///
 	///	Sets the number of blocks needed to free the results.

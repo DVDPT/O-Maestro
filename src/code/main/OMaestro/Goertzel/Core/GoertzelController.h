@@ -26,19 +26,14 @@ typedef void (*GoertzelSilenceCallback)(unsigned int numberOfBlocksProcessed);
 
 #define GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE (5)
 
+
+
 ///
 ///	The acceptable percentage between block and filtered power.
 ///		This value is important so that a call to Goertzel only occurs when
 ///		some of the block frequencies are present in the input signal
 ///
 //#define ACCEPTABLE_PERCENTAGE_BETWEEN_BLOCK_AND_FILTERED_POWER (10)
-
-struct GoertzelControllerBurstWritter
-{
-	GoertzelPowerType Power;
-	GoertzelSampleType * Buffer;
-
-};
 
 
 
@@ -50,7 +45,7 @@ class GoertzelController
 	///
 	///	The buffer to pass along to the BlockBlockingQueue
 	///
-	GoertzelSampleType _samplesbuffer[GOERTZEL_CONTROLLER_BUFFER_SIZE];
+	unsigned char _samplesbuffer[GOERTZEL_CONTROLLER_BUFFER_SIZE];
 #endif
 
 	///
@@ -61,8 +56,18 @@ class GoertzelController
 	///
 	///	The Write manipulator for the samples.
 	///
-	GoertzelBlockBlockingQueue::BlockManipulator _samplesWritter;
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 
+	GoertzelBlockBlockingQueue::BlockManipulator _samplesWritter;
+#else
+	GoertzelBurstWritter _samplesWritter;
+
+	///
+	///	A local variable to know when the filters are waiting for the controller to unlock them.
+	///
+	volatile bool _filtersWaiting;
+
+#endif
 	///
 	///	An instance of the results controller, to manage the results.
 	///
@@ -110,11 +115,12 @@ class GoertzelController
 	///
 	VersionEvent _filtersEvent;
 
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 	///
 	///	Controller Event, to wait for results
 	///
 	Event _controllerEvent;
-
+#endif
 	///
 	///	This fields serve to pass the configuration to the filters
 	///	this configuration is only done by the GoertzelController thread.
@@ -135,7 +141,7 @@ class GoertzelController
 	///
 	///	The controller routine to be ran in a separate thread.
 	///
-	SECTION(".internalmem") static void GoertzelControllerRoutine(GoertzelController * gc);
+	static void GoertzelControllerRoutine(GoertzelController * gc);
 
 	///
 	///	This method is only used by the Goertzel Filters, its porpuse is to
@@ -170,11 +176,12 @@ public:
 	GoertzelController(GoertzelFrequeciesBlock * freqs, int numberOfBlocks, GoertzelResultsCallback resultsCallback, GoertzelSilenceCallback silenceCallback,GoertzelSampleType* buffer, int bufferSize);
 #endif
 
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 	///
 	///	Single mode method.
 	///		Returns true when is possible to write a sample, false when is required to wait to write a sample.
 	///
-	 bool CanWriteSample();
+	bool CanWriteSample();
 
 	///
 	///	Single/Burst mode method.
@@ -186,6 +193,13 @@ public:
 	///	Single mode method.
 	///		Writes a sample in the buffer.
 	 void WriteSample(GoertzelSampleType * sample);
+
+#else
+	///
+	///	Returns the controller burst writter.
+	///
+	GoertzelBurstWritter& GetWritter(){ return _samplesWritter; }
+#endif
 
 	///
 	///	Reconfigures the filters.

@@ -8,21 +8,163 @@
 #include "Assert.h"
 #elif __MOS__
 #include <Debug.h>
+#include <Threading.h>
 #include <SystemTypes.h>
 #endif
 
 
 enum TypeOfManipulation{READ, WRITE};
 
+struct GoertzelQueueBlock
+{
+	GoertzelPowerType Power;
+	GoertzelSampleType Samples[GOERTZEL_FREQUENCY_MAX_N];
+};
+
+#ifdef GOERTZEL_CONTROLLER_BURST_MODE
+
+///
+///	The writter that supports GoertzelController burst mode.
+///
+struct GoertzelBurstWritter
+{
+	
+private:
+	friend class GoertzelBlockBlockingQueue;
+	///
+	///	The current block being written.
+	///
+	GoertzelQueueBlock * _current;
+
+	///
+	///	The buffer base.
+	///
+	GoertzelQueueBlock * _base;
+	
+	///
+	///	The last block of the buffer.
+	///
+	const GoertzelQueueBlock * _last;
+
+	///
+	///	The readers current position.
+	///
+	volatile GoertzelQueueBlock  ** _get;
+	
+	///
+	///	The current writter position.
+	///
+	unsigned int _currentPosition;
+
+	///
+	///	A local variable so that the controller knows when some block was written.
+	///
+	volatile unsigned int _nrOfBlocksWritten;
+
+	///
+	///	Sets the readers position to @get.
+	///
+	void SetQueueGetBlock(GoertzelQueueBlock ** get)
+	{
+		_get = (volatile GoertzelQueueBlock**)get;
+	}
+
+	bool IsFull()
+	{
+
+		if(_current == _last)
+			return ((GoertzelQueueBlock*)_base) == *_get;
+
+		GoertzelQueueBlock* currPut = _current;
+		currPut++;
+
+		return currPut == *_get;
+
+	}
+
+	///
+	///	Sets the writter to the next block.
+	///
+	void ConfigureToNextBlock()
+	{
+
+		if(_current == _last)
+			_current = _base;
+		else
+			_current++;
+
+
+		_currentPosition = 0;
+	}
+
+
+
+public:
+
+	GoertzelBurstWritter(GoertzelSampleType * base, unsigned int bufferSize)
+		: _current((GoertzelQueueBlock *)base),
+		  _base((GoertzelQueueBlock *)base),
+		  _last((GoertzelQueueBlock *) ((unsigned int)base + (bufferSize - sizeof(GoertzelQueueBlock)))),
+		  _currentPosition(0)
+	{
+
+		int i = 0;
+		i++;
+	}
+
+	bool TryWrite(GoertzelSampleType sample)
+	{
+		if(IsFull())
+		{
+			return false;
+		}
+		_current->Power += sample * sample;
+
+		_current->Samples[_currentPosition++] = sample;
+
+		if(_currentPosition == GOERTZEL_FREQUENCY_MAX_N)
+		{
+			ConfigureToNextBlock();
+#ifdef _WIN32
+			InterlockedIncrement(&_nrOfBlocksWritten);
+#elif __MOS__
+			Interlocked::Increment((U32*)&_nrOfBlocksWritten);
+#endif
+
+		}
+
+		return true;
+	}
+
+	NOINLINE  bool HaveWritedBlock()
+	{
+		return _nrOfBlocksWritten > 0;
+	}
+
+	NOINLINE  unsigned int GetAndResetNrOfBlocks()
+	{
+#ifdef _WIN32
+		return InterlockedExchange((LONG*)&_nrOfBlocksWritten,0);
+#elif __MOS__
+		unsigned int ret = _nrOfBlocksWritten;
+		_nrOfBlocksWritten = 0;
+		return ret;
+#endif
+	}
+
+};
+
+#endif
+
+
 ///
 ///	A Generic Block blocking queue
 ///	This queue purpose is to provide digital signal samples (by blocks) with a simple interface for Goertzel Filters.
-///	This queue is responsible for calculating the overall signal power (by block).
+///	This queue is responsible for calculating the overall signal power (by block) except on burst mode.
 /// This queue is thread safe and is prepared to serve multiple Goertzel Filters, with the same blocks.
 ///	NOTE:	The size of the buffer passed in the ctor should be multiple of sizeof(GOERTZEL_POWER_TYPE) + blocksize
 ///			this is needed so that the queue stores the power of the input signal.
 ///
-
 class GoertzelBlockBlockingQueue
 {
 
@@ -38,19 +180,19 @@ public:
 		friend class GoertzelBlockBlockingQueue;
 
 		///
-		///	This block power, calculated while the block was been writed
+		///	The representation of a queue block, with power and samples.
 		///
-		GoertzelPowerType * _currPower;
-		
+		GoertzelQueueBlock * _queueBlock;
+
 		///
-		///	The target queue
+		///	The instance to the queue that this class should read from.
 		///
 		GoertzelBlockBlockingQueue& _queue;
 
 		///
 		///	Control variables to access the buffer
 		///
-		int _lastPos, _currPos, _startPos;
+		int  _currPos;
 
 		unsigned int _currVersion;
 
@@ -59,16 +201,11 @@ public:
 		///
 		const TypeOfManipulation _tol;
 
-		SECTION(".internalmem") int GetAndAddCounter();
-
 		///
 		///	Sets the first position on the buffer, and the position to the block power, if this instance is for writing initializes the power variable.
 		///
-		SECTION(".internalmem") void SetCurrentPosition(int pos);
-		///
-		///	Sets the last index that should be read from this buffer
-		///
-		void SetLastPosition(int pos){ _lastPos = pos ; }
+		void SetCurrentPosition(GoertzelQueueBlock* pos);
+
 
 	public:
 		BlockManipulator(TypeOfManipulation tol, GoertzelBlockBlockingQueue& queue);
@@ -76,7 +213,7 @@ public:
 		///
 		///	Try to read a value, if the type of manipulation isn't READ or if there are no more values to read returns false.
 		///
-		SECTION(".internalmem") bool TryRead(GoertzelSampleType * value);
+		bool TryRead(GoertzelSampleType * value);
 
 		GoertzelPowerType GetBlockPower();
 
@@ -86,7 +223,7 @@ public:
 		///	Try to write a value, if the type of manipulation isn't WRITE or if there are no more space to write returns false.
 		///	This method iteratively calculates the block power
 		///
-		SECTION(".internalmem") bool TryWrite(GoertzelSampleType * value);
+		bool TryWrite(GoertzelSampleType * value);
 
 		bool CanRead();
 
@@ -99,19 +236,66 @@ public:
 	};
 
 private:
+
+	///
+	///	The filter synchronizer.
+	///
 	Monitor _monitor;
 
-	int _blockSize,  _bufSize;
-
-	volatile unsigned int _get, _put, _currNrOfGets, _nextPut, _currGetVersion,_maxNrOfGets,_numberOfBlocksUsed;
-
-
+	///
+	///	The buffer location.
+	///
 	GoertzelSampleType * _buf;
 
-		
+	///
+	///	The size of the buffer;
+	///
+	const unsigned int _bufSize;
+
+	///
+	///	The buffer last block;
+	///
+	const GoertzelQueueBlock * _lastBlock;
+
+	///
+	///	The Writter current location.
+	///
+	GoertzelQueueBlock * _put;
+
+	///
+	///	The reader current location.
+	///
+	GoertzelQueueBlock * _get;
+
+
+
+	///
+	///	Some control fields used to know when should the queue release the filters.
+	///
+	volatile unsigned int _currNrOfGets, _currGetVersion,_maxNrOfGets;
+
+	///
+	///	The current number of blocks being processed.
+	///
+	volatile unsigned int _numberOfBlocksUsed;
+
+	
+	
+	
 
 	bool IsEmpty(){ return _get == _put; }
-	bool IsFull() { return (_put + _blockSize) % _bufSize == _get;  }
+	
+	bool IsFull() 
+	{
+
+		if(_put == _lastBlock)
+			return ((GoertzelQueueBlock*)_buf) == _get;
+
+		GoertzelQueueBlock* currPut = _put;
+		currPut++;
+
+		return currPut == _get;
+	}
 
 
 
@@ -128,19 +312,28 @@ public:
 	///
 	GoertzelBlockBlockingQueue(GoertzelSampleType * buffer, int bufferSize,int blockSize, int numberOfGetsToFree = 1 );
 
-	SECTION(".internalmem") void AdquireWritterBlock(BlockManipulator& br);
+	void AdquireWritterBlock(BlockManipulator& br);
 
-	SECTION(".internalmem") void AdquireReaderBlock(BlockManipulator& br);
+	void AdquireReaderBlock(BlockManipulator& br);
 
-	SECTION(".internalmem") void ReleaseReader(BlockManipulator& br, bool noMoreInteress = false ,unsigned nrOfReads = 1);
+	void ReleaseReader(BlockManipulator& br, bool noMoreInteress = false ,unsigned nrOfReads = 1);
 
-	SECTION(".internalmem") void SetNumberOfGetsToFreeBlock(int nrOfGets);
+	void SetNumberOfGetsToFreeBlock(int nrOfGets);
 
-	SECTION(".internalmem") void ReleaseReadersIfPossible();
+	void ReleaseReadersIfPossible();
 
-	SECTION(".internalmem") void ReleaseWritter(BlockManipulator& br);
+	void ReleaseWritter(BlockManipulator& br);
 
-	SECTION(".internalmem") void UnlockReaders(int nrOfReaders);
+	void UnlockReaders(int nrOfReaders);
+
+#ifdef GOERTZEL_CONTROLLER_BURST_MODE
+
+	void InitializeBurstWritter(GoertzelBurstWritter& writter);
+
+	GoertzelQueueBlock* IncrementPutPointerAndGetIt();		
+
+	GoertzelQueueBlock* GetPutPointer(){ return _put; }
+#endif
 
 	///
 	///	Resets the current number of blocks used, and returns the previous value.

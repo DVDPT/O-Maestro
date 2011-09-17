@@ -1,7 +1,7 @@
-#include "GoertzelBase.h"
+﻿#include "GoertzelBase.h"
 
 
-SECTION(".internalmem") bool Goertzel::CalculateGoertzel(GOERTZEL_CONTROLLER_SAMPLES_TYPE * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const GoertzelPowerType totalPower)
+bool Goertzel::CalculateGoertzel(GOERTZEL_CONTROLLER_SAMPLES_TYPE * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const GoertzelPowerType totalPower)
 {
 		register GoertzelInternalPowerType Q0,Q1,Q2;
 		register float coef = freq->coefficient ;

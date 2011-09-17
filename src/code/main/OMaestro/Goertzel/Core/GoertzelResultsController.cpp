@@ -19,7 +19,11 @@ void GoertzelResultsController::SwapBuffer()
 
 void GoertzelResultsController::AddResult(GoertzelResult& result)
 {
+#ifdef _WIN32
+	int index = Interlocked::Increment(&_currentResultsCounter);
+#elif __MOS__
 	int index = Interlocked::Increment((U32*)&_currentResultsCounter);
+#endif
 	GoertzelResult& res = _results->results[index];
 	res.frequency = result.frequency;
 	res.percentage = result.percentage;

@@ -126,6 +126,7 @@ void GoertzelFilter::AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesP
 							
 		if(frequencyFounded)
 		{
+			
 			_controller->GetResultsController().
 						 AddResult(auxResult);
 		}
@@ -134,7 +135,7 @@ void GoertzelFilter::AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesP
 }
 
 
-SECTION(".internalmem") void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
+void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 {
 	GoertzelFilter& goertzelFilter = *filterP;
 	GoertzelController& gc = *goertzelFilter._controller;
@@ -205,7 +206,7 @@ SECTION(".internalmem") void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilte
 			///
 			if(reader.IsBlockValid())
 			{
-
+								
 				///
 				///	Filter the samples and calculate this block power.
 				///

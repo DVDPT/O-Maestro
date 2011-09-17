@@ -34,6 +34,7 @@ public:
 	VectorInterruptController& GetVic(){return _intrCtrl;}
 	GPIO& GetGpio(){return _gpio;}
 	Timer& GetTimer0(){ return _timer0; }
+	PinConnectBlock& GetPinConnectBlock(){ return _pcb; }
 
 	static PeripheralContainer& GetInstance();
 };

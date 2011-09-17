@@ -48,7 +48,7 @@ extern "C"
 {void *__aeabi_atexit (){}}
 
 
-Timer timer(LPC2xxx_TIMER1,60000);
+//Timer timer(LPC2xxx_TIMER1,60000);
 
 ///
 ///	The Goertzel configuration.
@@ -82,18 +82,16 @@ int nrResults = 0;
 SECTION(".internalmem") void ControllerResultCallback(GoertzelResultCollection& col)
 {
 
-	if(++nrResults == NR_OF_RUNS)
+/*
+	for(int i = 0; i < col.nrOfResults; ++i)
 	{
-		timer.Disable();
-		System::GetStandardOutput().Write("\n\rN: ");
-		System::GetStandardOutput().Write(NR_OF_SAMPLES);
-		System::GetStandardOutput().Write("\n\rTotal Time: ");
-		System::GetStandardOutput().Write(timer.GetTimerCount());
-		System::GetStandardOutput().Write("\n\rRelative Time: ");
-		System::GetStandardOutput().Write(timer.GetTimerCount() / NR_OF_RUNS);
-		nrResults = 0;
-		timer.Enable();
+		System::GetStandardOutput().Write("Freq : ");
+		System::GetStandardOutput().Write(col.results[i].frequency->frequency);
+		System::GetStandardOutput().Write(" Percentagem : ");
+		System::GetStandardOutput().Write(col.results[i].percentage);
+		System::GetStandardOutput().Write("\n\r");
 	}
+	*/
 	timeController.AddResult(col);
 }
 
@@ -108,14 +106,18 @@ SECTION(".internalmem") void ControllerSilenceCallback(unsigned int numberOfBloc
 ////////////////////////////////////////////////	APP		////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "SignalAcquisition.h"
+
+#define ACQUISITION_TIMER_CLOCK (3400)
+#define ACQUISITION_ADC_DIVISER (15)
+
+GoertzelSignalAcquisition acquisition(ACQUISITION_TIMER_CLOCK,ACQUISITION_ADC_DIVISER);
+
+GoertzelSignalAcquisition* inputSignal;
+GoertzelBurstWritter* buffer;
 
 
-
-
-
-
-
-double frequencies[] = {4186.01};
+double frequencies[] = {739.989,261.626,92.4986,4186.01};
 
 
 
@@ -131,8 +133,8 @@ SECTION(".internalmem") void PresentationRoutine()
 	{
 
 		GoertzelNoteResultCollection& results = timeController.FetchResults();
-		timer.Disable();
-		counter = timer.GetTimerCount();
+		//timer.Disable();
+		//counter = timer.GetTimerCount();
 		System::GetStandardOutput().Write("\n\rTotal Time: ");
 		System::GetStandardOutput().Write(counter);
 		System::GetStandardOutput().Write("\n\r");
@@ -164,7 +166,7 @@ SECTION(".internalmem") void PresentationRoutine()
 		timeController.FreeFetchedResults();
 		System::GetStandardOutput().Write("Timer restarted\n\r");
 
-		timer.Enable();
+		//timer.Enable();
 
 
 	}while(true);
@@ -175,7 +177,7 @@ SECTION(".internalmem") void PresentationRoutine()
 ///
 ///	An auxiliary function that generated teorical signal.
 ///
-static void GenerateSinusoid(short * sinusoid, int size,int fs, double* fo, int sizeOfFo)
+SECTION(".internalmem") static void GenerateSinusoid(short * sinusoid, int size,int fs, double* fo, int sizeOfFo)
 {
 	register int i = 0;
 	for(;i < size ; ++i)
@@ -203,6 +205,7 @@ static void AddToSinusoidFrequency(short * sinusoid, int size, int fs, double fo
 int nrOfRuns = 0;
 SECTION(".internalmem") static void SendSamplesToController()
 {
+#ifndef GOERTZEL_CONTROLLER_BURST_MODE
 	for(register int i = 0; i < NR_OF_SAMPLES; ++i)
 	{
 		if(goertzelController.CanWriteSample())
@@ -218,6 +221,26 @@ SECTION(".internalmem") static void SendSamplesToController()
 
 	}
 	nrOfRuns++;
+#else
+	int nrOfFails = 0;
+	GoertzelBurstWritter& writter = goertzelController.GetWritter();
+	for(register int i = 0; i < NR_OF_SAMPLES; ++i)
+	{
+		if(!writter.TryWrite(signal[i]))
+		{
+			nrOfFails++;
+			Thread::Yield();
+		}
+		Thread::Yield();
+
+
+	}
+
+	System::GetStandardOutput().Write("\n\rENDED, fails: ");
+	System::GetStandardOutput().Write(nrOfFails);
+	System::GetStandardOutput().Write("\n\r");
+
+#endif
 }
 
 void ShiftSamples(short* signal,unsigned int size)
@@ -257,8 +280,17 @@ void SetEnvironmentPower()
 }
 
 Task presentationThread((ThreadFunction)PresentationRoutine);
+
+
 int main()
 {
+
+	inputSignal = &acquisition;
+	buffer = &goertzelController.GetWritter();
+
+	System::GetStandardOutput().Write("Running with: ");
+	System::GetStandardOutput().Write(GOERTZEL_CONTROLLER_BUFFER_SIZE);
+	System::GetStandardOutput().Write(" samples\n\r");
 
 
 	///
@@ -291,11 +323,14 @@ int main()
 	///	Start the presentation thread.
 	///
 	presentationThread.Start(NULL);
+
+
+
 	System::GetStandardOutput().Write("started ui\n\r");
 	///
 	///	Generate input signal.
 	///
-	GenerateSinusoid(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,frequencies,sizeof(frequencies) / sizeof(double));
+	//GenerateSinusoid(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,frequencies,sizeof(frequencies) / sizeof(double));
 
 
 	//AddToSinusoidFrequency(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,55,5919,8799);
@@ -305,12 +340,15 @@ int main()
 	///
 	///	Send samples to the controller.
 	///
-	System::GetStandardOutput().Write("Timer started\n\r");
-	timer.Enable();
+	System::GetStandardOutput().Write("ADC started\n\r");
+	inputSignal->Start();
+
+	/*
 	while(true)
 	{
 		SendSamplesToController();
-	}
+	}*/
+
 
 
 	//printf("\nMain Thread exiting.\n");

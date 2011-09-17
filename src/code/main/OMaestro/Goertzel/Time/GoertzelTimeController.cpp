@@ -6,7 +6,7 @@ GoertzelTimeController::GoertzelTimeController()
 	: _currNumberOfBlocksUsed(0), _currNrOfResults(0),_nrOfBlocksToFreeResults(0),_currResult(_resultsBuffer), _currConsumerResult(_resultsBuffer),
 	 _orderIndex(0), _lastResultBuffer(&_resultsBuffer[NUMBER_OF_BUFFERS-1])
 {
-	_currNrOfResults = (unsigned int*)&_currResult->nrOfResults;
+	_currNrOfResults = &_currResult->nrOfResults;
 }
 //
 void GoertzelTimeController::Initialize(GoertzelFrequeciesBlock* blocks, unsigned int nrOfBlocks)
@@ -66,14 +66,18 @@ GoertzelNoteResultCollection& GoertzelTimeController::FetchResults()
 	Monitor::Enter(_monitor);
 
 	WaitUntilResultsAreAvailable();
+
 #ifdef _WIN32
 	Assert::That(_buffersAvailability > 0,"_buffersAvailability should never have zero ");
+#elif __MOS__
+	DebugAssertTrue(_buffersAvailability > 0);
 #endif
+
 
 
 	Monitor::Exit(_monitor);
 	
-	return (GoertzelNoteResultCollection&)*_currConsumerResult;
+	return *_currConsumerResult;
 }
 
 void GoertzelTimeController::FreeFetchedResults()
@@ -86,10 +90,10 @@ void GoertzelTimeController::FreeFetchedResults()
 		_currConsumerResult++;
 
 	if(_buffersAvailability == NUMBER_OF_BUFFERS)
-	{
-		*_currNrOfResults = 0;
 		Monitor::NotifyAll(_monitor);
-	}
+
+	if(_buffersAvailability == NUMBER_OF_BUFFERS)
+		*_currNrOfResults = 0;
 
 	_buffersAvailability--;
 
@@ -116,7 +120,6 @@ void GoertzelTimeController::WaitUntilBufferIsAvailable()
 	}
 }
 
-
 void GoertzelTimeController::WaitUntilResultsAreAvailable()
 {
 	
@@ -137,7 +140,8 @@ void GoertzelTimeController::ReleaseWaitingReadersAndSwapBuffer()
 	///	Wake the readers.
 	///
 	Monitor::NotifyAll(_monitor);
-	GoertzelNoteResultCollection& oldResults = (GoertzelNoteResultCollection&)*_currResult;
+
+	GoertzelNoteResultCollection& oldResults = *_currResult;
 
 	if(_currResult == _lastResultBuffer)
 	{
@@ -168,7 +172,7 @@ void GoertzelTimeController::ReleaseWaitingReadersAndSwapBuffer()
 		///	because the number of blocks used isn't exactly the nr of blocks to free
 		///	the results.
 		///		
-		MigrateResults(oldResults,(GoertzelNoteResultCollection&)*_currResult,blocksUsed,lastOrderIndex);
+		MigrateResults(oldResults,*_currResult,blocksUsed,lastOrderIndex);
 	}
 
 }
@@ -208,8 +212,8 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 
 #ifdef _WIN32
 	Assert::That(blockDifference > 0, "The difference of the blocks used to migrate results should be bigger than zero");
-#else
-
+#elif __MOS__
+	DebugAssertTrue(blockDifference > 0);
 #endif
 	bool resultMigrated = false;
 	for(int i = 0; i < oldResults.nrOfResults; ++i)
@@ -236,9 +240,9 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 		_orderIndex = 1;
 	
 }
+
 GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFrequency& freq)
 {
-
 
 	if(freq.noteIndex == -1)
 	{
@@ -247,7 +251,7 @@ GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFreque
 		///
 		freq.noteIndex = *_currNrOfResults;
 		
-		GoertzelNoteResult& currRes = (GoertzelNoteResult&)_currResult->noteResults[freq.noteIndex];
+		GoertzelNoteResult& currRes = _currResult->noteResults[freq.noteIndex];
 		
 		///
 		///	Set the frequency in the results buffer.
@@ -259,17 +263,17 @@ GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFreque
 		///
 		///	Increment the number of results.
 		///
-		*_currNrOfResults = *_currNrOfResults+1;
+		(*_currNrOfResults)++;
 
 		return currRes;
 	}
 
-	GoertzelNoteResult& auxRes = (GoertzelNoteResult&)_currResult->noteResults[freq.noteIndex];
+	GoertzelNoteResult& auxRes = _currResult->noteResults[freq.noteIndex];
 	///
 	///	If this note was added on the last set of results, return the previous result.
 	///	This means that the note played continuously over time.
 	///	
-	if(auxRes.endIndex == (_orderIndex-1))
+	if(auxRes.endIndex >= (_orderIndex-1))
 		return auxRes;
 
 	///

@@ -35,14 +35,14 @@ class GoertzelResultsController
 	///
 	///	Swaps the buffer that should be used to store the results.
 	///
-	SECTION(".internalmem") void SwapBuffer();
+	void SwapBuffer();
 
 public:
 
 	///
 	///	
 	///
-	SECTION(".internalmem") GoertzelResultsController(GoertzelBlockBlockingQueue& queue);
+	GoertzelResultsController(GoertzelBlockBlockingQueue& queue);
 
 	///
 	///	Returns the current results and swaps to the next buffer.
@@ -52,5 +52,5 @@ public:
 	///
 	///	Adds to the current buffer the @result.
 	///
-	SECTION(".internalmem") void AddResult(GoertzelResult& result);
+	void AddResult(GoertzelResult& result);
 };
