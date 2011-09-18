@@ -12,21 +12,10 @@ extern GoertzelBurstWritter* buffer;
 
 
 
-U32 overrun = 0;
-
-extern "C" void fiq_handler()
+extern "C" SECTION("internalmem")  void fiq_handler()
 {
-	GoertzelSampleType sample = inputSignal->GetSampleFromInputSignal();
-	if(!buffer->TryWrite(sample))
-	{
-		overrun++;
 
-	}
-
-
-
-
-
+	buffer->TryWrite(inputSignal->GetSampleFromInputSignal());
 
 }
 
@@ -34,23 +23,24 @@ GoertzelSignalAcquisition::GoertzelSignalAcquisition(U32 timerClock, U32 adcDivi
 	:
 
 	_adc(PeripheralContainer::GetInstance().GetPinConnectBlock(),adcDiviser),
-	_timer(LPC2xxx_TIMER1,timerClock)
+	_timer(LPC2xxx_TIMER1,timerClock),
+	_vic(PeripheralContainer::GetInstance().GetVic())
 {
 
 }
 
 void GoertzelSignalAcquisition::Start()
 {
-	PeripheralContainer::GetInstance().GetVic().EnableInterrupt();
-	PeripheralContainer::GetInstance().GetVic().SetISR(INTERRUPT_ENTRY_TIMER1,fiq_handler,ACQUISITION_INTERRUPT_PRIORITY,VIC_INTERRUPT_AS_FIQ);
+	_vic.EnableInterrupt();
+	_vic.SetISR(INTERRUPT_ENTRY_TIMER1,fiq_handler,ACQUISITION_INTERRUPT_PRIORITY,VIC_INTERRUPT_AS_FIQ);
 	_timer.SetInterruptPeriod(1);
 	_timer.Enable();
-	PeripheralContainer::GetInstance().GetVic().UnmaskInterrupt(INTERRUPT_ENTRY_TIMER1);
+	_vic.UnmaskInterrupt(INTERRUPT_ENTRY_TIMER1);
 }
 
 void GoertzelSignalAcquisition::Stop()
 {
-	PeripheralContainer::GetInstance().GetVic().MaskInterrupt(INTERRUPT_ENTRY_TIMER1);
+	_vic.MaskInterrupt(INTERRUPT_ENTRY_TIMER1);
 	_timer.Disable();
 }
 
@@ -64,7 +54,7 @@ GoertzelSampleType GoertzelSignalAcquisition::GetSampleFromInputSignal()
 void GoertzelSignalAcquisition::SampleAcquired()
 {
 	Timer::OnTimerIsrComplete((InterruptArgs*)NULL,&_timer);
-	PeripheralContainer::GetInstance().GetVic().EndProcessTreatmentInterrupt();
+	_vic.EndProcessTreatmentInterrupt();
 }
 
 #endif

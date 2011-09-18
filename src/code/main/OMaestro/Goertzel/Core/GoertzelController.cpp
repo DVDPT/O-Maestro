@@ -170,13 +170,13 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 		///
 		gc->_controllerEvent.Wait();
 #else
-
+		GoertzelBurstWritter& writter = (gc->_samplesWritter);
 		do
 		{
-			if(gc->_samplesWritter.HaveWritedBlock())
+			if(writter.HaveWritedBlock())
 			{
 
-				unsigned int nrOfBlocksWritted = gc->_samplesWritter.GetAndResetNrOfBlocks();
+				unsigned int nrOfBlocksWritted = writter.GetAndResetNrOfBlocks();
 				GoertzelQueueBlock* block = gc->_samplesQueue.GetPutPointer();
 				
 				while(nrOfBlocksWritted--)
@@ -187,10 +187,12 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 					}
 					block = gc->_samplesQueue.IncrementPutPointerAndGetIt();
 				}
+
 			}
 			
 			if(gc->_filtersWaiting)
 				break;
+
 
  #ifdef _WIN32
 			SwitchToThread();
@@ -243,7 +245,7 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 			gc->_resultsCallback(currentResults);
 			currNumberOfSilenceBlocks = 0;
 		}
-		else if(currNumberOfSilenceBlocks > GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE)
+		else if(currentResults.blocksUsed > GOERTZEL_CONTROLLER_NUMBER_OF_BLOCKS_TO_REPORT_SILENCE)
 		{
 			gc->_silenceCallback(currentResults.blocksUsed);
 			currNumberOfSilenceBlocks = 0;

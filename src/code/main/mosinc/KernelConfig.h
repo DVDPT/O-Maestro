@@ -13,3 +13,9 @@
 
 typedef KERNEL_THREAD_CONTEXT_TYPE Context;
 
+///
+///	All the critical, most used functions are marked with this annotation
+///	so that the user can reallocate the code to fastest sections.
+///
+#define CRITICAL_OPERATION SECTION(".internalmem")
+

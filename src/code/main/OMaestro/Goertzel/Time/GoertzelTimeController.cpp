@@ -40,9 +40,13 @@ void GoertzelTimeController::AddResult(GoertzelResultCollection& results)
 		}
 	}
 
+
+
 	if(freqProcessed)
 		UpdateControllerStatus(results.blocksUsed);
 
+	else
+		AddSilence(results.blocksUsed);
 	Monitor::Exit(_monitor);
 }
 
@@ -77,7 +81,7 @@ GoertzelNoteResultCollection& GoertzelTimeController::FetchResults()
 
 	Monitor::Exit(_monitor);
 	
-	return *_currConsumerResult;
+	return (GoertzelNoteResultCollection&)*_currConsumerResult;
 }
 
 void GoertzelTimeController::FreeFetchedResults()
@@ -141,7 +145,7 @@ void GoertzelTimeController::ReleaseWaitingReadersAndSwapBuffer()
 	///
 	Monitor::NotifyAll(_monitor);
 
-	GoertzelNoteResultCollection& oldResults = *_currResult;
+	GoertzelNoteResultCollection& oldResults = (GoertzelNoteResultCollection&)*_currResult;
 
 	if(_currResult == _lastResultBuffer)
 	{
@@ -172,7 +176,7 @@ void GoertzelTimeController::ReleaseWaitingReadersAndSwapBuffer()
 		///	because the number of blocks used isn't exactly the nr of blocks to free
 		///	the results.
 		///		
-		MigrateResults(oldResults,*_currResult,blocksUsed,lastOrderIndex);
+		MigrateResults(oldResults,(GoertzelNoteResultCollection&)*_currResult,blocksUsed,lastOrderIndex);
 	}
 
 }
@@ -251,7 +255,7 @@ GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFreque
 		///
 		freq.noteIndex = *_currNrOfResults;
 		
-		GoertzelNoteResult& currRes = _currResult->noteResults[freq.noteIndex];
+		GoertzelNoteResult& currRes = (GoertzelNoteResult&)_currResult->noteResults[freq.noteIndex];
 		
 		///
 		///	Set the frequency in the results buffer.
@@ -268,7 +272,7 @@ GoertzelNoteResult& GoertzelTimeController::FetchCurrentResultFor(GoertzelFreque
 		return currRes;
 	}
 
-	GoertzelNoteResult& auxRes = _currResult->noteResults[freq.noteIndex];
+	GoertzelNoteResult& auxRes = (GoertzelNoteResult&)_currResult->noteResults[freq.noteIndex];
 	///
 	///	If this note was added on the last set of results, return the previous result.
 	///	This means that the note played continuously over time.

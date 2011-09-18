@@ -90,7 +90,7 @@ void ControllerSilenceCallback(unsigned int numberOfBlocksProcessed)
 
 
 
-double frequencies[] = {4186.01};
+double frequencies[] = {739.989,261.626,92.4986,4186.01};
 
 
 

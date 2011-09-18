@@ -100,9 +100,9 @@ private:
 public:
 
 	GoertzelBurstWritter(GoertzelSampleType * base, unsigned int bufferSize)
-		: _base((GoertzelQueueBlock *)base),
+		: _current((GoertzelQueueBlock *)base),
+		  _base((GoertzelQueueBlock *)base),
 		  _last((GoertzelQueueBlock *) ((unsigned int)base + (bufferSize - sizeof(GoertzelQueueBlock)))),
-		  _current((GoertzelQueueBlock *)base),
 		  _currentPosition(0)
 	{}
 

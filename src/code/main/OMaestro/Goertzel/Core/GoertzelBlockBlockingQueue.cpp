@@ -1,6 +1,98 @@
 ﻿#include "GoertzelBlockBlockingQueue.h"
 
 
+void GoertzelBurstWritter::SetQueueGetBlock(GoertzelQueueBlock ** get)
+{
+	_get = (volatile GoertzelQueueBlock**)get;
+}
+
+bool GoertzelBurstWritter::IsFull()
+{
+
+	if(_current == _last)
+		return ((GoertzelQueueBlock*)_base) == *_get;
+
+	GoertzelQueueBlock* currPut = _current;
+	currPut++;
+
+	return currPut == *_get;
+
+}
+
+///
+///	Sets the writter to the next block.
+///
+void GoertzelBurstWritter::ConfigureToNextBlock()
+{
+
+	if(_current == _last)
+		_current = _base;
+	else
+		_current++;
+
+
+	_currentPosition = 0;
+}
+
+GoertzelBurstWritter::GoertzelBurstWritter(GoertzelSampleType * base, unsigned int bufferSize)
+		: _current((GoertzelQueueBlock *)base),
+		  _base((GoertzelQueueBlock *)base),
+		  _last((GoertzelQueueBlock *) ((unsigned int)base + (bufferSize - sizeof(GoertzelQueueBlock)))),
+		  _currentPosition(0)
+{
+
+	int i = 0;
+	i++;
+}
+
+bool GoertzelBurstWritter::TryWrite(GoertzelSampleType sample)
+{
+	if(IsFull())
+	{
+		return false;
+	}
+	_current->Power += sample * sample;
+
+	_current->Samples[_currentPosition++] = sample;
+
+	if(_currentPosition == GOERTZEL_FREQUENCY_MAX_N)
+	{
+		ConfigureToNextBlock();
+#ifdef _WIN32
+		InterlockedIncrement(&_nrOfBlocksWritten);
+#elif __MOS__
+		Interlocked::Increment((U32*)&_nrOfBlocksWritten);
+#endif
+
+	}
+
+	return true;
+}
+
+bool GoertzelBurstWritter::HaveWritedBlock()
+{
+	return _nrOfBlocksWritten > 0;
+}
+
+unsigned int GoertzelBurstWritter::GetAndResetNrOfBlocks()
+{
+#ifdef _WIN32
+	return InterlockedExchange((LONG*)&_nrOfBlocksWritten,0);
+#elif __MOS__
+	System::DisableInterrupts();
+	unsigned int ret = _nrOfBlocksWritten;
+	_nrOfBlocksWritten = 0;
+	System::EnableInterrupts();
+	return ret;
+#endif
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////   BlockBlockingQueue    /////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 GoertzelBlockBlockingQueue::GoertzelBlockBlockingQueue(GoertzelSampleType * buffer, int bufferSize,int blockSize, int numberOfGetsToFree /* = 1*/ )
 	:
@@ -35,7 +127,7 @@ void GoertzelBlockBlockingQueue::AdquireWritterBlock(BlockManipulator& br)
 	///
 	///	Set the initial position of the witter at put position
 	///
-	br.SetCurrentPosition(_put);
+	br.SetCurrentPosition((GoertzelQueueBlock*)_put);
 
 
 
@@ -67,7 +159,7 @@ void GoertzelBlockBlockingQueue::AdquireReaderBlock(BlockManipulator& br)
 	///
 	///	Set the initial position of the Reader at get position
 	///
-	br.SetCurrentPosition(_get);
+	br.SetCurrentPosition((GoertzelQueueBlock*)_get);
 
 
 
@@ -208,7 +300,7 @@ int GoertzelBlockBlockingQueue::GetAndResetNumberOfBlocksUsed()
 
 void GoertzelBlockBlockingQueue::InitializeBurstWritter(GoertzelBurstWritter& writter)
 {
-	writter.SetQueueGetBlock(&_get);
+	writter.SetQueueGetBlock((GoertzelQueueBlock**)&_get);
 }
 
 GoertzelQueueBlock* GoertzelBlockBlockingQueue::IncrementPutPointerAndGetIt()
@@ -229,12 +321,12 @@ GoertzelQueueBlock* GoertzelBlockBlockingQueue::IncrementPutPointerAndGetIt()
 
 	Monitor::Exit(_monitor);
 
-	return _put;
+	return (GoertzelQueueBlock*)_put;
 }
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////   Block Manipulator    /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -329,3 +421,6 @@ bool GoertzelBlockBlockingQueue::BlockManipulator::IsBlockValid()
 { 
 	return GetBlockPower() != 0; 
 }
+
+
+

@@ -72,7 +72,7 @@ private:
 	///
 	///	A general purpose Node to store this thread in queues.
 	///
-	Node<UThread> _node;
+	 Node<UThread> _node;
 	
 	///
 	///	Auxiliary constants to control the state of the parker.
@@ -119,12 +119,12 @@ private:
 	///
 	///	The inner function to ParkThread method.
 	///
-	ParkerStatus ParkInner(U32 timeout, ThreadState threadState);
+	CRITICAL_OPERATION ParkerStatus ParkInner(U32 timeout, ThreadState threadState);
 
 	///
 	///	Auxiliary function to the thread parker.
 	///
-	bool TestAndClearMask(U8 mask);
+	CRITICAL_OPERATION bool TestAndClearMask(U8 mask);
 
 	///
 	///	Returns the thread timestamp.
@@ -173,7 +173,7 @@ public:
 	///
 	///	Schedules this thread.
 	///
-	void UnparkThread(ParkerStatus status = PARK_SUCCESS);
+	CRITICAL_OPERATION void UnparkThread(ParkerStatus status = PARK_SUCCESS);
 
 	///
 	///	Tries to lock this thread parker.

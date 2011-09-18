@@ -13,6 +13,7 @@ class GoertzelSignalAcquisition
 {
 	ADC _adc;
 	Timer _timer;
+	VectorInterruptController& _vic;
 
 public:
 
@@ -22,9 +23,9 @@ public:
 
 	void Stop();
 
-	GoertzelSampleType GetSampleFromInputSignal();
+	SECTION("internalmem") GoertzelSampleType GetSampleFromInputSignal();
 
-	void SampleAcquired();
+	SECTION("internalmem") void SampleAcquired();
 
 };
 

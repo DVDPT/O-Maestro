@@ -49,7 +49,7 @@ public:
 	///	Returns true when the thread is successful awaken,
 	///	false otherwise.
 	///
-	SECTION(".internalmem")bool Wait(U32 timeout = TIMEOUT_INFINITE);
+	bool Wait(U32 timeout = TIMEOUT_INFINITE);
 
 	///
 	///	Returns true when there are threads waiting in this waitblock.

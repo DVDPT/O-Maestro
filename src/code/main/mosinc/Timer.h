@@ -51,7 +51,7 @@ class Timer
 	///
 	///	The period that this timer should do a interrupt.
 	///
-	U32 _intrPeriod;
+	volatile U32 _intrPeriod;
 
 
 
@@ -85,7 +85,7 @@ public:
 	///
 	///	Sets this time interrupt period.
 	///
-	void SetInterruptPeriod(U32 period){ _intrPeriod = period; }
+	void SetInterruptPeriod(U32 period);
 
 	///
 	///	Returns this timer interrupt descriptor.

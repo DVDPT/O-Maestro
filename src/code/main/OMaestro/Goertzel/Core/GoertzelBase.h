@@ -3,6 +3,9 @@
 //#include "LowPassFilter.h"
 #include "List.h"
 
+#ifdef __MOS__
+#include <System.h>
+#endif
 
 #include "GoertzelConfiguration.h"
 
@@ -64,5 +67,5 @@ static GoertzelInternalPowerType CalculateFrequencyPower(GoertzelInternalPowerTy
 
 public:
 
-	static bool CalculateGoertzel(GOERTZEL_CONTROLLER_SAMPLES_TYPE * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const GoertzelPowerType totalPower);
+	CRITICAL_OPERATION static bool CalculateGoertzel(GOERTZEL_CONTROLLER_SAMPLES_TYPE * samples, int samplesSize,GoertzelFrequency * freq , GoertzelResult * result,const GoertzelPowerType totalPower);
 };

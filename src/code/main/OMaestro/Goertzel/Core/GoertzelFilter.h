@@ -11,7 +11,7 @@
 #elif __MOS__
 
 #include <Threading.h>
-
+#include <System.h>
 #endif
 class GoertzelController;
 ///
@@ -77,12 +77,12 @@ class GoertzelFilter
 	///
 	///	Call Goertzel with all the frequencies of the this filter block and produce results.
 	///
-	void AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesPower);
+	 void AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesPower);
 
 	///
 	///	This goertzel filter routine.
 	///
-	static void GoertzelFilterRoutine(GoertzelFilter* filter);
+	 static void GoertzelFilterRoutine(GoertzelFilter* filter);
 
 	
 

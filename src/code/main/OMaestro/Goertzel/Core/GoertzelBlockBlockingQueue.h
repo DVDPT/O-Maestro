@@ -9,7 +9,7 @@
 #elif __MOS__
 #include <Debug.h>
 #include <Threading.h>
-#include <SystemTypes.h>
+#include <System.h>
 #endif
 
 
@@ -64,93 +64,25 @@ private:
 	///
 	///	Sets the readers position to @get.
 	///
-	void SetQueueGetBlock(GoertzelQueueBlock ** get)
-	{
-		_get = (volatile GoertzelQueueBlock**)get;
-	}
+	void SetQueueGetBlock(GoertzelQueueBlock ** get);
 
-	bool IsFull()
-	{
-
-		if(_current == _last)
-			return ((GoertzelQueueBlock*)_base) == *_get;
-
-		GoertzelQueueBlock* currPut = _current;
-		currPut++;
-
-		return currPut == *_get;
-
-	}
+	bool IsFull();
 
 	///
 	///	Sets the writter to the next block.
 	///
-	void ConfigureToNextBlock()
-	{
-
-		if(_current == _last)
-			_current = _base;
-		else
-			_current++;
-
-
-		_currentPosition = 0;
-	}
+	void ConfigureToNextBlock();
 
 
 
 public:
 
-	GoertzelBurstWritter(GoertzelSampleType * base, unsigned int bufferSize)
-		: _current((GoertzelQueueBlock *)base),
-		  _base((GoertzelQueueBlock *)base),
-		  _last((GoertzelQueueBlock *) ((unsigned int)base + (bufferSize - sizeof(GoertzelQueueBlock)))),
-		  _currentPosition(0)
-	{
+	GoertzelBurstWritter(GoertzelSampleType * base, unsigned int bufferSize);
 
-		int i = 0;
-		i++;
-	}
+	bool TryWrite(GoertzelSampleType sample);
 
-	bool TryWrite(GoertzelSampleType sample)
-	{
-		if(IsFull())
-		{
-			return false;
-		}
-		_current->Power += sample * sample;
-
-		_current->Samples[_currentPosition++] = sample;
-
-		if(_currentPosition == GOERTZEL_FREQUENCY_MAX_N)
-		{
-			ConfigureToNextBlock();
-#ifdef _WIN32
-			InterlockedIncrement(&_nrOfBlocksWritten);
-#elif __MOS__
-			Interlocked::Increment((U32*)&_nrOfBlocksWritten);
-#endif
-
-		}
-
-		return true;
-	}
-
-	NOINLINE  bool HaveWritedBlock()
-	{
-		return _nrOfBlocksWritten > 0;
-	}
-
-	NOINLINE  unsigned int GetAndResetNrOfBlocks()
-	{
-#ifdef _WIN32
-		return InterlockedExchange((LONG*)&_nrOfBlocksWritten,0);
-#elif __MOS__
-		unsigned int ret = _nrOfBlocksWritten;
-		_nrOfBlocksWritten = 0;
-		return ret;
-#endif
-	}
+	NOINLINE  bool HaveWritedBlock();
+	NOINLINE  unsigned int GetAndResetNrOfBlocks();
 
 };
 
@@ -213,7 +145,7 @@ public:
 		///
 		///	Try to read a value, if the type of manipulation isn't READ or if there are no more values to read returns false.
 		///
-		bool TryRead(GoertzelSampleType * value);
+		CRITICAL_OPERATION bool TryRead(GoertzelSampleType * value);
 
 		GoertzelPowerType GetBlockPower();
 
@@ -223,7 +155,7 @@ public:
 		///	Try to write a value, if the type of manipulation isn't WRITE or if there are no more space to write returns false.
 		///	This method iteratively calculates the block power
 		///
-		bool TryWrite(GoertzelSampleType * value);
+		CRITICAL_OPERATION bool TryWrite(GoertzelSampleType * value);
 
 		bool CanRead();
 
@@ -260,12 +192,12 @@ private:
 	///
 	///	The Writter current location.
 	///
-	GoertzelQueueBlock * _put;
+	volatile GoertzelQueueBlock * _put;
 
 	///
 	///	The reader current location.
 	///
-	GoertzelQueueBlock * _get;
+	volatile GoertzelQueueBlock * _get;
 
 
 
@@ -291,7 +223,7 @@ private:
 		if(_put == _lastBlock)
 			return ((GoertzelQueueBlock*)_buf) == _get;
 
-		GoertzelQueueBlock* currPut = _put;
+		GoertzelQueueBlock* currPut = (GoertzelQueueBlock*)_put;
 		currPut++;
 
 		return currPut == _get;
@@ -312,17 +244,17 @@ public:
 	///
 	GoertzelBlockBlockingQueue(GoertzelSampleType * buffer, int bufferSize,int blockSize, int numberOfGetsToFree = 1 );
 
-	void AdquireWritterBlock(BlockManipulator& br);
+	CRITICAL_OPERATION void AdquireWritterBlock(BlockManipulator& br);
 
-	void AdquireReaderBlock(BlockManipulator& br);
+	CRITICAL_OPERATION void AdquireReaderBlock(BlockManipulator& br);
 
-	void ReleaseReader(BlockManipulator& br, bool noMoreInteress = false ,unsigned nrOfReads = 1);
+	CRITICAL_OPERATION void ReleaseReader(BlockManipulator& br, bool noMoreInteress = false ,unsigned nrOfReads = 1);
 
 	void SetNumberOfGetsToFreeBlock(int nrOfGets);
 
 	void ReleaseReadersIfPossible();
 
-	void ReleaseWritter(BlockManipulator& br);
+	CRITICAL_OPERATION void ReleaseWritter(BlockManipulator& br);
 
 	void UnlockReaders(int nrOfReaders);
 
@@ -332,7 +264,7 @@ public:
 
 	GoertzelQueueBlock* IncrementPutPointerAndGetIt();		
 
-	GoertzelQueueBlock* GetPutPointer(){ return _put; }
+	GoertzelQueueBlock* GetPutPointer(){ return (GoertzelQueueBlock*)_put; }
 #endif
 
 	///

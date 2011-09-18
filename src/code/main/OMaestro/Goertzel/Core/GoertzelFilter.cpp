@@ -50,7 +50,7 @@ void GoertzelFilter::Restart()
 }
 
 
-GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
+ GoertzelPowerType GoertzelFilter::FilterAndCalculatePower(
 															GoertzelBlockBlockingQueue::BlockManipulator& reader,
 															GoertzelPowerType* goertzelOverallPower,
 															LowPassFilter& filter,
@@ -260,6 +260,7 @@ void GoertzelFilter::GoertzelFilterRoutine(GoertzelFilter* filterP)
 				///	Report to the controller that this filter is going to halt processing, and wait for new blocks.
 				///
 				gc.WaitForNewBlocks(&eventVersion);
+
 
 			}
 

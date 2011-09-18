@@ -12,7 +12,7 @@
 ///
 ///	This define swaps code between the teorical test and the real test.
 ///
-#define TEORICAL_TEST
+//#define TEORICAL_TEST
 
 
 
@@ -100,7 +100,7 @@ SECTION(".internalmem") void ControllerSilenceCallback(unsigned int numberOfBloc
 {
 
 
-	//timeController.AddSilence(numberOfBlocksProcessed);
+	timeController.AddSilence(numberOfBlocksProcessed);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////	APP		////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ SECTION(".internalmem") void ControllerSilenceCallback(unsigned int numberOfBloc
 #define ACQUISITION_TIMER_CLOCK (3400)
 #define ACQUISITION_ADC_DIVISER (15)
 
-GoertzelSignalAcquisition acquisition(ACQUISITION_TIMER_CLOCK,ACQUISITION_ADC_DIVISER);
+
 
 GoertzelSignalAcquisition* inputSignal;
 GoertzelBurstWritter* buffer;
@@ -135,14 +135,15 @@ SECTION(".internalmem") void PresentationRoutine()
 		GoertzelNoteResultCollection& results = timeController.FetchResults();
 		//timer.Disable();
 		//counter = timer.GetTimerCount();
-		System::GetStandardOutput().Write("\n\rTotal Time: ");
-		System::GetStandardOutput().Write(counter);
-		System::GetStandardOutput().Write("\n\r");
+		//System::GetStandardOutput().Write("\n\rTotal Time: ");
+		//System::GetStandardOutput().Write(counter);
+		//System::GetStandardOutput().Write("\n\r");
 
 			//printf("------------------------------------ RESULTS(%d) ------------------------------------\n",results.nrOfResults);
 
-			System::GetStandardOutput().Write("Nr Results: ");
-			System::GetStandardOutput().Write(results.nrOfResults);
+			//System::GetStandardOutput().Write("Nr Results: ");
+			//System::GetStandardOutput().Write(results.nrOfResults);
+		System::DisableInterrupts();
 			System::GetStandardOutput().Write("\n\r");
 
 
@@ -162,9 +163,10 @@ SECTION(".internalmem") void PresentationRoutine()
 			}
 			//printf("-------------------------------------------------------------------------------------\n");
 
+			System::EnableInterrupts();
 
 		timeController.FreeFetchedResults();
-		System::GetStandardOutput().Write("Timer restarted\n\r");
+		//System::GetStandardOutput().Write("Timer restarted\n\r");
 
 		//timer.Enable();
 
@@ -285,6 +287,7 @@ Task presentationThread((ThreadFunction)PresentationRoutine);
 int main()
 {
 
+	GoertzelSignalAcquisition acquisition(ACQUISITION_TIMER_CLOCK,ACQUISITION_ADC_DIVISER);
 	inputSignal = &acquisition;
 	buffer = &goertzelController.GetWritter();
 
@@ -322,7 +325,6 @@ int main()
 	///
 	///	Start the presentation thread.
 	///
-	presentationThread.Start(NULL);
 
 
 
@@ -341,14 +343,22 @@ int main()
 	///	Send samples to the controller.
 	///
 	System::GetStandardOutput().Write("ADC started\n\r");
-	inputSignal->Start();
 
-	/*
+#ifndef TEORICAL_TEST
+
+	acquisition.Start();
+
+	PresentationRoutine();
+#else
+	presentationThread.Start(NULL);
+
+	GenerateSinusoid(signal,NR_OF_SAMPLES,GOERTZEL_CONTROLLER_FS,frequencies,sizeof(frequencies) / sizeof(double));
 	while(true)
 	{
-		SendSamplesToController();
-	}*/
 
+		SendSamplesToController();
+	}
+#endif
 
 
 	//printf("\nMain Thread exiting.\n");
@@ -358,7 +368,7 @@ int main()
 
 
 	Thread::GetCurrentThread().ParkThread();
-
+	System::GetStandardOutput().Write("ERRORRR");
 }
 
 //*/

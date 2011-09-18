@@ -141,7 +141,7 @@ class GoertzelController
 	///
 	///	The controller routine to be ran in a separate thread.
 	///
-	static void GoertzelControllerRoutine(GoertzelController * gc);
+	CRITICAL_OPERATION static void GoertzelControllerRoutine(GoertzelController * gc);
 
 	///
 	///	This method is only used by the Goertzel Filters, its porpuse is to

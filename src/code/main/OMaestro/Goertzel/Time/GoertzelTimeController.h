@@ -10,6 +10,7 @@
 #elif __MOS__
 
 #include <Debug.h>
+#include <System.h>
 
 #endif
 ///
@@ -60,12 +61,12 @@ class GoertzelTimeController
 	///
 	///	The current result being used.
 	///
-	GoertzelNoteResultCollection * _currResult;
+	volatile GoertzelNoteResultCollection * _currResult;
 
 	///
 	///	The position to the consumer result, this points to the results that are currently being read.
 	///
-	GoertzelNoteResultCollection * _currConsumerResult;
+	volatile GoertzelNoteResultCollection * _currConsumerResult;
 
 	///
 	///	The number of blocks used to produce the resulst present in @_currResult.
@@ -75,7 +76,7 @@ class GoertzelTimeController
 	///
 	///	How many results are presente in @_currResult.
 	///
-	unsigned int * _currNrOfResults;
+	volatile unsigned int * _currNrOfResults;
 
 	///
 	///	This counter serves to know each notes were played at the same time.
@@ -91,7 +92,7 @@ class GoertzelTimeController
 	///
 	///	The number of blocks needed to free the results
 	///
-	unsigned int _nrOfBlocksToFreeResults;
+	volatile unsigned int _nrOfBlocksToFreeResults;
 
 	///
 	///	An general purpose counter, to know the current state of the results.
@@ -108,38 +109,38 @@ class GoertzelTimeController
 	///
 	///	If both buffers are filled waits until one of them is empty, else returns immediately.
 	///
-	void WaitUntilBufferIsAvailable();
+	CRITICAL_OPERATION void WaitUntilBufferIsAvailable();
 
 	///
 	///	Waits until there is results to present.
 	///
-	void WaitUntilResultsAreAvailable();
+	CRITICAL_OPERATION void WaitUntilResultsAreAvailable();
 
 	///
 	///	Release any reader waiting for the results.
 	///	
-	void ReleaseWaitingReadersAndSwapBuffer();
+	CRITICAL_OPERATION void ReleaseWaitingReadersAndSwapBuffer();
 
 	///
 	///	Saves @freq in the buffer.
 	///
-	void SaveFrequencyResultInBuffer(GoertzelFrequency& freq,unsigned int nrOfBlocksUsed);
+	CRITICAL_OPERATION void SaveFrequencyResultInBuffer(GoertzelFrequency& freq,unsigned int nrOfBlocksUsed);
 
 	///
 	///	Updates the internal status of the controller with the new data.
 	///	Also checks if is time to wake up readers and switch buffers.
 	///
-	void UpdateControllerStatus(unsigned int nrOfBlocksUsed);
+	CRITICAL_OPERATION void UpdateControllerStatus(unsigned int nrOfBlocksUsed);
 
 	///
 	///	This method cleans the noteIndex of the founded frequencies. 
 	///
-	void CleanFoundedFrequencies(GoertzelNoteResultCollection& oldResults);
+	CRITICAL_OPERATION void CleanFoundedFrequencies(GoertzelNoteResultCollection& oldResults);
 
 	///
 	///	Migrate results that passed the number of blocks need to present them.
 	///
-	void MigrateResults(GoertzelNoteResultCollection& oldResults, GoertzelNoteResultCollection& newResults, unsigned int blocksUsed,unsigned int lastOrderIndex);
+	CRITICAL_OPERATION void MigrateResults(GoertzelNoteResultCollection& oldResults, GoertzelNoteResultCollection& newResults, unsigned int blocksUsed,unsigned int lastOrderIndex);
 
 	///
 	///	Returns from the current results buffer the result associated with the @freq.
@@ -165,12 +166,12 @@ public:
 	///	Stores in the buffer the @results, if the nrOfBlocksUsed + _currNumberOfBlocksUsed >= _nrOfBlocksToFreeResults it frees
 	///	the current results to be consumed.
 	///
-	void AddResult(GoertzelResultCollection& results);
+	CRITICAL_OPERATION void AddResult(GoertzelResultCollection& results);
 
 	///
 	///	The same that @AddResult but without storing new results.
 	///
-	void AddSilence(unsigned int nrOfBlocksUsed);
+	CRITICAL_OPERATION void AddSilence(unsigned int nrOfBlocksUsed);
 
 	///
 	///	Returns the current results, if no results are available this method blocks.

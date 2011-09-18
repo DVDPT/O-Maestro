@@ -14,7 +14,7 @@ GoertzelBlockBlockingQueue::GoertzelBlockBlockingQueue(GoertzelSampleType * buff
 
 
 {
-	printf("%d\n",sizeof(GoertzelQueueBlock));
+
 
 }
 
@@ -298,13 +298,23 @@ bool GoertzelBlockBlockingQueue::BlockManipulator::TryWrite(GoertzelSampleType *
 
 bool GoertzelBlockBlockingQueue::BlockManipulator::CanRead()
 {
+#ifdef _WIN32
 	Assert::That(_tol == READ,"BlockManipulator is WRITE type, cant be readed.");
+#elif __MOS__
+	DebugAssertTrue(_tol == READ);
+#endif
+
 	return _currPos < GOERTZEL_FREQUENCY_MAX_N;
 }
 
 bool GoertzelBlockBlockingQueue::BlockManipulator::CanWrite() 
 {
+#ifdef _WIN32
 	Assert::That(_tol == WRITE,"BlockManipulator is READ type, cant be writted.");
+#elif __MOS__
+	DebugAssertTrue(_tol == WRITE);
+#endif
+
 	return _currPos < GOERTZEL_FREQUENCY_MAX_N;
 }
 

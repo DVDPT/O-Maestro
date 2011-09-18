@@ -2,8 +2,16 @@
 
 #include "GoertzelBase.h"
 #include "Monitor.h"
+
+#ifdef _WIN32
+
 #include "Assert.h"
 
+#elif __MOS__
+
+#include <Debug.h>
+
+#endif
 ///
 ///	The number of notes that can be catched each second, the second is relative because it depends
 ///	on the defined time to a note.

@@ -66,8 +66,12 @@ GoertzelNoteResultCollection& GoertzelTimeController::FetchResults()
 	Monitor::Enter(_monitor);
 
 	WaitUntilResultsAreAvailable();
-	
+
+#ifdef _WIN32
 	Assert::That(_buffersAvailability > 0,"_buffersAvailability should never have zero ");
+#elif __MOS__
+	DebugAssertTrue(_buffersAvailability > 0);
+#endif
 
 
 
@@ -206,9 +210,11 @@ void GoertzelTimeController::MigrateResults(GoertzelNoteResultCollection& oldRes
 	
 	_currNumberOfBlocksUsed = blockDifference;
 
-
+#ifdef _WIN32
 	Assert::That(blockDifference > 0, "The difference of the blocks used to migrate results should be bigger than zero");
-
+#elif __MOS__
+	DebugAssertTrue(blockDifference > 0);
+#endif
 	bool resultMigrated = false;
 	for(int i = 0; i < oldResults.nrOfResults; ++i)
 	{

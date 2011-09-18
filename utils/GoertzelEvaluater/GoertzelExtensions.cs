@@ -140,7 +140,7 @@ namespace GoertzelEvaluater
             ///
             /// normalização do ganho
             ///
-            /*/
+            //
             var maxValue = GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS);
             
             List<double> d = new List<double>();
