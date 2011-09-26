@@ -147,7 +147,7 @@ class GoertzelController
 	///	This method is only used by the Goertzel Filters, its porpuse is to
 	///	block the filters until there is more samples to process.
 	///
-	void WaitForNewBlocks(unsigned int * version);
+	CRITICAL_OPERATION void WaitForNewBlocks(unsigned int * version);
 
 	///
 	///	Returns the results controller.

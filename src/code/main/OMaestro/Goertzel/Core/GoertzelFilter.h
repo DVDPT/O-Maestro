@@ -72,17 +72,17 @@ class GoertzelFilter
 	///	Filters the samples present in the @reader, and accumulates the power in goertzelOverallPower.
 	///	Returns the filteredPower.
 	///
-	GoertzelPowerType FilterAndCalculatePower(GoertzelBlockBlockingQueue::BlockManipulator& reader, GoertzelPowerType* goertzelOverallPower, LowPassFilter& filter, volatile unsigned int * overallIndex, volatile unsigned int * filteredSamplesIdx);
+	SECTION(".internalmem") GoertzelPowerType FilterAndCalculatePower(GoertzelBlockBlockingQueue::BlockManipulator& reader, GoertzelPowerType* goertzelOverallPower, LowPassFilter& filter, volatile unsigned int * overallIndex, volatile unsigned int * filteredSamplesIdx);
 
 	///
 	///	Call Goertzel with all the frequencies of the this filter block and produce results.
 	///
-	 void AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesPower);
+	SECTION(".internalmem") void AnalyzeBlocksFrequencies(GoertzelPowerType goertzelSamplesPower);
 
 	///
 	///	This goertzel filter routine.
 	///
-	 static void GoertzelFilterRoutine(GoertzelFilter* filter);
+	SECTION(".internalmem") static void GoertzelFilterRoutine(GoertzelFilter* filter);
 
 	
 

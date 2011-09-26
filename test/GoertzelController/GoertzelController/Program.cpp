@@ -8,7 +8,7 @@
 ///
 ///	This define swaps code between the teorical test and the real test.
 ///
-#define TEORICAL_TEST
+//#define TEORICAL_TEST
 
 
 
@@ -62,7 +62,7 @@ GoertzelTimeController timeController;
 
 void ControllerResultCallback(GoertzelResultCollection& col)
 {
-	//
+	/*/
 	for(int i = 0; i < col.nrOfResults; ++i)
 	{
 		printf("%d, [%d%%] |  ",col.results[i].frequency->frequency,col.results[i].percentage);
@@ -115,7 +115,7 @@ void PresentationRoutine()
 			for(int i = 0; i < results.nrOfResults; ++i)
 			{
 				unsigned int time = (int)(((double)results.noteResults[i].nrOfBlocksUsed/NR_OF_BLOCKS_PER_RELATIVE_SECOND) * (1000 * RELATIVE_SECOND));
-				printf("The frequency %d - (%s|%s) has played %d milis: Started at block %d and ended at %d. Used %d blocks\n",results.noteResults[i].frequency->frequency, results.noteResults[i].frequency->englishNotation, results.noteResults[i].frequency->portugueseNotation,time,results.noteResults[i].startIndex,results.noteResults[i].endIndex,results.noteResults[i].nrOfBlocksUsed);
+				printf("The frequency %d - (%s|%s) has played %d milis\n",results.noteResults[i].frequency->frequency, results.noteResults[i].frequency->englishNotation, results.noteResults[i].frequency->portugueseNotation,time);
 			}
 			printf("-------------------------------------------------------------------------------------\n");
 		}
@@ -228,8 +228,6 @@ void SetEnvironmentPower()
 	printf("Analysing surrounding environment for %dsec",TIME_TO_EVALUATE_ENVIRONMENT_POWER);
 	unsigned long long allPower = 0;
 
-	for(int i = 0; i < TIME_TO_EVALUATE_ENVIRONMENT_POWER; ++i) 
-		PlayerRecorder::record(1,FS,signal);
 	
 	for(int i = 0; i < TIME_TO_EVALUATE_ENVIRONMENT_POWER; ++i)
 	{
@@ -244,11 +242,14 @@ void SetEnvironmentPower()
 		else
 			Assert::That(false,"ERROR in env evaluation");
 	}
+	envPower = allPower;
 	//envPower = allPower / (TIME_TO_EVALUATE_ENVIRONMENT_POWER * 4);
+	printf("\nSetting Goertzel Environment Power to %u\n",envPower);
 	envPower  = 1;
+
 #endif
 
-	printf("\nSetting Goertzel Environment Power to %u\n",envPower);
+	
 	goertzelController.SetEnvironmentPower(envPower);
 }
 
@@ -310,6 +311,7 @@ int main()
 	///
 	getchar();
 #else
+	printf("Acquiring 10 seconds of sound\nPress c to clear the screen.");
 	do
 	{
 		
@@ -332,7 +334,6 @@ int main()
 			///
 			///	Send them to the goertzel.
 			///
-			//printf("%u\n",GetPowerFrom(signal,NR_OF_SAMPLES));
 			SendSamplesToController();
 
 		}

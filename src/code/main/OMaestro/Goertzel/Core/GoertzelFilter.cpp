@@ -16,6 +16,7 @@ GoertzelFilter::GoertzelFilter()
 
 void GoertzelFilter::Start()
 {
+	_filterThread.SetThreadPriority(KERNEL_THREAD_DEFAULT_PRIORITY-1);
 	_filterThread.Start((ThreadFunction)&GoertzelFilterRoutine, (ThreadArgument)this);
 }
 

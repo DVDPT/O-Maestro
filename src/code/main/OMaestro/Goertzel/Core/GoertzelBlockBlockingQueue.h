@@ -66,12 +66,12 @@ private:
 	///
 	void SetQueueGetBlock(GoertzelQueueBlock ** get);
 
-	bool IsFull();
+	CRITICAL_OPERATION bool IsFull();
 
 	///
 	///	Sets the writter to the next block.
 	///
-	void ConfigureToNextBlock();
+	CRITICAL_OPERATION void ConfigureToNextBlock();
 
 
 
@@ -79,10 +79,10 @@ public:
 
 	GoertzelBurstWritter(GoertzelSampleType * base, unsigned int bufferSize);
 
-	bool TryWrite(GoertzelSampleType sample);
+	CRITICAL_OPERATION bool TryWrite(GoertzelSampleType sample);
 
-	NOINLINE  bool HaveWritedBlock();
-	NOINLINE  unsigned int GetAndResetNrOfBlocks();
+	CRITICAL_OPERATION bool HaveWritedBlock();
+	CRITICAL_OPERATION unsigned int GetAndResetNrOfBlocks();
 
 };
 
@@ -250,21 +250,21 @@ public:
 
 	CRITICAL_OPERATION void ReleaseReader(BlockManipulator& br, bool noMoreInteress = false ,unsigned nrOfReads = 1);
 
-	void SetNumberOfGetsToFreeBlock(int nrOfGets);
+	CRITICAL_OPERATION void SetNumberOfGetsToFreeBlock(int nrOfGets);
 
-	void ReleaseReadersIfPossible();
+	CRITICAL_OPERATION void ReleaseReadersIfPossible();
 
 	CRITICAL_OPERATION void ReleaseWritter(BlockManipulator& br);
 
-	void UnlockReaders(int nrOfReaders);
+	CRITICAL_OPERATION void UnlockReaders(int nrOfReaders);
 
 #ifdef GOERTZEL_CONTROLLER_BURST_MODE
 
 	void InitializeBurstWritter(GoertzelBurstWritter& writter);
 
-	GoertzelQueueBlock* IncrementPutPointerAndGetIt();		
+	CRITICAL_OPERATION GoertzelQueueBlock* IncrementPutPointerAndGetIt();
 
-	GoertzelQueueBlock* GetPutPointer(){ return (GoertzelQueueBlock*)_put; }
+	CRITICAL_OPERATION GoertzelQueueBlock* GetPutPointer(){ return (GoertzelQueueBlock*)_put; }
 #endif
 
 	///
@@ -272,7 +272,7 @@ public:
 	///	this method isn't thread safe so it should be only called when the goertzel filters
 	///	are "sleeping".
 	///
-	int GetAndResetNumberOfBlocksUsed();
+	CRITICAL_OPERATION int GetAndResetNumberOfBlocksUsed();
 
 
 

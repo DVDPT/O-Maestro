@@ -23,6 +23,8 @@ private:
 public:
 	ADC(PinConnectBlock& p);
 	ADC(PinConnectBlock& p, U8 clock);
+	void StartConversion();
+	bool TryGetSample(U16 * sample);
 	void SetClock(U8 clock);
 	U16 GetSample();
 };

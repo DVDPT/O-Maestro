@@ -14,6 +14,7 @@ class GoertzelSignalAcquisition
 	ADC _adc;
 	Timer _timer;
 	VectorInterruptController& _vic;
+	volatile bool _startedConversion;
 
 public:
 
@@ -26,6 +27,8 @@ public:
 	SECTION("internalmem") GoertzelSampleType GetSampleFromInputSignal();
 
 	SECTION("internalmem") void SampleAcquired();
+
+	SECTION("internalmem") bool TryGetSample(U16* sample);
 
 };
 

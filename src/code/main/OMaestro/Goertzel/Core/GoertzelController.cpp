@@ -153,11 +153,14 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
 	///
 	gc->_processedBlocks = 0;
 
+
 	///
 	///	Initialize Goertzel Filters Threads
 	///
 	for(int i = 0; i < GOERTZEL_NR_OF_BLOCKS; ++i)
+	{
 		gc->_filters[i].Start(*gc,gc->_samplesQueue,gc->_frequenciesBlock[i]);
+	}
 
 	unsigned int currNumberOfSilenceBlocks = 0;
 
@@ -197,7 +200,8 @@ void GoertzelController::GoertzelControllerRoutine(GoertzelController * gc)
  #ifdef _WIN32
 			SwitchToThread();
  #elif __MOS__
-			Thread::Yield();
+			//Thread::Yield();
+			Thread::Sleep(100);
  #endif
 		}while(true);
 

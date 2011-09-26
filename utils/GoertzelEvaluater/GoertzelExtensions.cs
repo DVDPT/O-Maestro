@@ -133,14 +133,12 @@ namespace GoertzelEvaluater
 
             var bandwidth = biggestFrequency - smallerFrequency;
 
-            //Console.WriteLine("\nFilter values for band pass filter between {0} and {1} with fc:",smallerFrequency,biggestFrequency);
-            //Console.WriteLine("\nFilter values for {0} ", smallerFrequency);
             GetFilterValues(smallerFrequencyW0, biggestFrequencyW0, block.FilterValues);
 
             ///
             /// normalização do ganho
             ///
-            //
+
             var maxValue = GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS);
             
             List<double> d = new List<double>();
@@ -151,8 +149,7 @@ namespace GoertzelEvaluater
             }
 
             block.FilterValues = d;
-            //*/
-            //Console.WriteLine(GetFilterMaxValue((bandwidth / 2) + smallerFrequency, block.FilterValues.ToArray(), Program.FS));
+           
 
 
 
@@ -235,12 +232,7 @@ namespace GoertzelEvaluater
                                             K2 = frequency1.K
                                         };
                                 x.AddLast(aux);
-                                /*
-                                Console.WriteLine("Freq1:{0} & Freq2:{1} | K1:{2}, K2:{3} ",goertzelFrequency.Frequency,
-                                                                                           frequency1.Frequency,
-                                                                                           (int)goertzelFrequency.K, 
-                                                                                           (int)frequency1.K);
-                            */
+                               
                                  }
                         }
                     }

@@ -35,7 +35,7 @@ class GoertzelResultsController
 	///
 	///	Swaps the buffer that should be used to store the results.
 	///
-	CRITICAL_OPERATION void SwapBuffer();
+	 void SwapBuffer();
 
 public:
 
